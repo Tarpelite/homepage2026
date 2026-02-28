@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>陈天宇 / Tianyu Chen</title>
+<meta name="description" content="Tianyu Chen, Assistant Researcher at Beihang University. Research: AI for Science, Neural Operators, PDE Foundation Models.">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=JetBrains+Mono:wght@300;400&family=Noto+Serif+SC:wght@300;400;500;600&display=swap');
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --fg: #1a1a1a;
+    --fg-secondary: #555;
+    --fg-muted: #888;
+    --bg: #faf9f7;
+    --accent: #2c5f4a;
+    --accent-light: #e8f0ec;
+    --border: #e5e2dd;
+    --serif-en: 'Crimson Pro', Georgia, serif;
+    --serif-cn: 'Noto Serif SC', '宋体', serif;
+    --mono: 'JetBrains Mono', 'Menlo', monospace;
+  }
+
+  html {
+    font-size: 17px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: var(--serif-cn), var(--serif-en);
+    color: var(--fg);
+    background: var(--bg);
+    line-height: 1.8;
+    min-height: 100vh;
+  }
+
+  ::selection { background: var(--accent); color: #fff; }
+
+  .container {
+    max-width: 660px;
+    margin: 0 auto;
+    padding: 4rem 2rem 6rem;
+  }
+
+  /* ── Language Toggle ── */
+  .lang-switch {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    z-index: 100;
+  }
+
+  .lang-btn {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    color: var(--fg-muted);
+    background: none;
+    border: 1px solid var(--border);
+    padding: 0.3em 0.7em;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.25s;
+  }
+
+  .lang-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  /* ── Bilingual ── */
+  [data-lang="en"] { display: none; }
+  body.en [data-lang="en"] { display: block; }
+  body.en [data-lang="zh"] { display: none; }
+  span[data-lang="en"] { display: none; }
+  body.en span[data-lang="en"] { display: inline; }
+  body.en span[data-lang="zh"] { display: none; }
+
+  /* ── Header with photo ── */
+  header { margin-bottom: 3rem; }
+
+  .header-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.8rem;
+  }
+
+  .header-text { flex: 1; }
+
+  .header-photo {
+    flex-shrink: 0;
+    width: 110px;
+    height: 110px;
+    border-radius: 6px;
+    object-fit: cover;
+    object-position: center 15%;
+    filter: grayscale(8%);
+    opacity: 0.95;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+
+  .name-cn {
+    font-size: 1.6rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.15rem;
+  }
+
+  .name-en {
+    font-family: var(--serif-en);
+    font-size: 1.05rem;
+    font-weight: 300;
+    color: var(--fg-secondary);
+    letter-spacing: 0.03em;
+    font-style: italic;
+  }
+
+  .affiliation {
+    margin-top: 1.2rem;
+    font-size: 0.88rem;
+    color: var(--fg-secondary);
+    line-height: 1.9;
+  }
+
+  .divider {
+    width: 2rem;
+    height: 1px;
+    background: var(--border);
+    margin: 2.5rem 0;
+  }
+
+  /* ── Sections ── */
+  .section { margin-bottom: 2.5rem; }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    font-weight: 300;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--fg-muted);
+    margin-bottom: 0.8rem;
+  }
+
+  .bio {
+    font-size: 0.92rem;
+    color: var(--fg-secondary);
+    line-height: 2;
+  }
+
+  .bio a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+  }
+
+  .bio a:hover { border-bottom-color: var(--accent); }
+
+  /* ── News ── */
+  .news-list {
+    list-style: none;
+    font-size: 0.85rem;
+    color: var(--fg-secondary);
+  }
+
+  .news-list li {
+    margin-bottom: 0.55rem;
+    line-height: 1.7;
+  }
+
+  .news-date {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--fg-muted);
+    margin-right: 0.5rem;
+    min-width: 5rem;
+    display: inline-block;
+  }
+
+  /* ── Publications ── */
+  .pub-list { list-style: none; }
+
+  .pub-item {
+    margin-bottom: 1.3rem;
+    font-size: 0.88rem;
+    line-height: 1.85;
+    color: var(--fg-secondary);
+  }
+
+  .pub-title {
+    font-family: var(--serif-en);
+    font-weight: 400;
+    color: var(--fg);
+    font-size: 0.92rem;
+  }
+
+  .pub-venue {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: var(--accent);
+    background: var(--accent-light);
+    padding: 0.1em 0.45em;
+    border-radius: 2px;
+    letter-spacing: 0.02em;
+    margin-left: 0.2em;
+    position: relative;
+    top: -0.5px;
+    white-space: nowrap;
+  }
+
+  .pub-venue.highlight::after {
+    content: ' \2605';
+    font-size: 0.6rem;
+  }
+
+  .pub-authors {
+    font-size: 0.78rem;
+    color: var(--fg-muted);
+  }
+
+  .pub-authors .me {
+    color: var(--fg);
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .pub-links { margin-top: 0.2rem; }
+
+  .pub-links a {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--fg-muted);
+    text-decoration: none;
+    margin-right: 0.8rem;
+    transition: color 0.2s;
+  }
+
+  .pub-links a:hover { color: var(--accent); }
+
+  .pub-year-divider {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--fg-muted);
+    letter-spacing: 0.1em;
+    margin: 1.5rem 0 0.8rem;
+    opacity: 0.7;
+  }
+
+  /* ── Contact ── */
+  .contact-list {
+    list-style: none;
+    font-size: 0.85rem;
+  }
+
+  .contact-list li {
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+  }
+
+  .contact-label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--fg-muted);
+    min-width: 4.5rem;
+    letter-spacing: 0.03em;
+  }
+
+  .contact-value { color: var(--fg-secondary); }
+
+  .contact-value a {
+    color: var(--fg-secondary);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+
+  .contact-value a:hover {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  /* ── Footer ── */
+  footer {
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--fg-muted);
+    letter-spacing: 0.02em;
+  }
+
+  /* ── Animations ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  header, .section, footer {
+    animation: fadeUp 0.6s ease-out both;
+  }
+  .section:nth-child(2) { animation-delay: 0.06s; }
+  .section:nth-child(3) { animation-delay: 0.1s; }
+  .section:nth-child(4) { animation-delay: 0.14s; }
+  .section:nth-child(5) { animation-delay: 0.18s; }
+  .section:nth-child(6) { animation-delay: 0.22s; }
+  footer { animation-delay: 0.26s; }
+
+  /* ── Responsive ── */
+  @media (max-width: 520px) {
+    html { font-size: 15.5px; }
+    .container { padding: 2.5rem 1.4rem 4rem; }
+    .header-content { gap: 1.2rem; }
+    .header-photo { width: 88px; height: 88px; }
+    .contact-list li { flex-direction: column; gap: 0.1rem; }
+    .contact-label { min-width: unset; }
+    .lang-switch { top: 1rem; right: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="lang-switch">
+  <button class="lang-btn" onclick="toggleLang()" aria-label="Switch language">
+    <span data-lang="zh">EN</span><span data-lang="en">中文</span>
+  </button>
+</div>
+
+<div class="container">
+
+  <header>
+    <div class="header-content">
+      <div class="header-text">
+        <div class="name-cn">陈天宇</div>
+        <div class="name-en">Tianyu Chen</div>
+        <div class="affiliation" data-lang="zh">
+          北京航空航天大学 · 计算机学院<br>
+          助理研究员 / 卓越百人博士后<br>
+          导师：李建欣 教授 · 合作导师：郑志明 院士
+        </div>
+        <div class="affiliation" data-lang="en">
+          School of Computer Science and Engineering<br>
+          Beihang University<br>
+          Assistant Researcher / Postdoctoral Fellow<br>
+          Advisor: Prof. Jianxin Li · Co-advisor: Acad. Zhiming Zheng
+        </div>
+      </div>
+      <img class="header-photo" src="./photo.png" alt="Tianyu Chen">
+    </div>
+  </header>
+
+  <div class="divider"></div>
+
+  <div class="section">
+    <div class="section-label">research</div>
+    <div class="bio" data-lang="zh">
+      研究方向为科学智算（AI for Science），关注如何用机器学习方法求解偏微分方程（PDE），探索物理机制嵌入的基础模型构建方法。目前聚焦于神经算子、科学计算基础模型的理论与工程实践。同时负责<a href="https://cnai4s.com/" target="_blank" rel="noopener">国家科学智算共性技术平台 CNAI4S</a> 的建设与运维，服务用户超 19 万。
+    </div>
+    <div class="bio" data-lang="en">
+      My research focuses on <strong>AI for Science (AI4S)</strong>, specifically on solving partial differential equations (PDEs) with machine learning and building physics-informed foundation models. I work on neural operators, scientific computing foundation models, and lead the development of <a href="https://cnai4s.com/" target="_blank" rel="noopener">CNAI4S</a>, a national platform for AI-driven scientific computing serving 190K+ users.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">news</div>
+    <ul class="news-list">
+      <li><span class="news-date">2025.11</span> <span data-lang="zh">Long-window Anchoring 入选 AAAI 2026 <strong>Oral</strong></span><span data-lang="en">Long-window Anchoring selected as AAAI 2026 <strong>Oral</strong> </span></li>
+      <li><span class="news-date">2025.11</span> <span data-lang="zh">GeoNum 被 AAAI 2026 录用</span><span data-lang="en">GeoNum accepted by AAAI 2026</span></li>
+       <li><span class="news-date">2025.05</span> <span data-lang="zh">OmniArch 被 ICML 2025 录用</span><span data-lang="en">OmniArch accepted by ICML 2025</span></li>
+      <li><span class="news-date">2025.04</span> <span data-lang="zh">FreqMoE 被 IJCAI 2025 录用</span><span data-lang="en">FreqMoE accepted by IJCAI 2025</span></li>
+      <li><span class="news-date">2025.03</span> <span data-lang="zh">Galaxy Walker 入选 CVPR 2025 <strong>Highlight</strong></span><span data-lang="en">Galaxy Walker selected as CVPR 2025 <strong>Highlight</strong></span></li>
+      <li><span class="news-date">2024.07</span> <span data-lang="zh">IJCAI 2024 三维车辆气动阻力预测竞赛 决赛入围</span><span data-lang="en">Finalist in IJCAI 2024 Aerodynamic Drag Prediction Contest</span></li>
+      <li><span class="news-date">2024.01</span> <span data-lang="zh">第九届中国"互联网+"创新创业大赛 全国银奖</span><span data-lang="en">National Silver Award, 9th China "Internet+" Innovation Competition</span></li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <div class="section-label">selected publications</div>
+
+    <div class="pub-year-divider">— 2025 —</div>
+    <ul class="pub-list">
+      <li class="pub-item">
+        <div class="pub-title">OmniArch: Building Foundation Model for Scientific Computing <span class="pub-venue">ICML 2025</span></div>
+        <div class="pub-authors"><span class="me">Tianyu Chen</span>, Haoyi Zhou, Ying Li, Hao Wang, Chonghan Gao, Rongye Shi, Shanghang Zhang, Jianxin Li</div>
+        <div class="pub-links">
+          <a href="https://arxiv.org/abs/2402.16014" target="_blank">arxiv</a>
+          <a href="https://proceedings.mlr.press/v267/chen25cp.html" target="_blank">proceedings</a>
+          <a href="https://openi.pcl.ac.cn/cty315/OmniArch" target="_blank">code</a>
+        </div>
+      </li>
+      <li class="pub-item">
+        <div class="pub-title">Galaxy Walker: Geometry-aware VLMs for Galaxy-scale Understanding <span class="pub-venue highlight">CVPR 2025 Highlight</span></div>
+        <div class="pub-authors"><span class="me">Tianyu Chen</span>, Xingcheng Fu, Yisen Gao, Haodong Qian, Yuecen Wei, Kun Yan, Haoyi Zhou, Jianxin Li</div>
+        <div class="pub-links">
+          <a href="https://arxiv.org/abs/2503.18578" target="_blank">arxiv</a>
+          <a href="https://openaccess.thecvf.com/content/CVPR2025/html/Chen_Galaxy_Walker_Geometry-aware_VLMs_For_Galaxy-scale_Understanding_CVPR_2025_paper.html" target="_blank">proceedings</a>
+        </div>
+      </li>
+      <li class="pub-item">
+        <div class="pub-title">FreqMoE: Dynamic Frequency Enhancement for Neural PDE Solvers <span class="pub-venue">IJCAI 2025</span></div>
+        <div class="pub-authors"><span class="me">Tianyu Chen</span>, Haoyi Zhou, Ying Li, Hao Wang, Zhenzhe Zhang, Tianchen Zhu, Shanghang Zhang, Jianxin Li</div>
+        <div class="pub-links">
+          <a href="https://arxiv.org/abs/2505.06858" target="_blank">arxiv</a>
+          <a href="https://www.ijcai.org/proceedings/2025/818" target="_blank">proceedings</a>
+        </div>
+      </li>
+      <li class="pub-item">
+        <div class="pub-title">PINNsAgent: Automated PDE Surrogation with Large Language Models <span class="pub-venue">ICML 2025</span></div>
+        <div class="pub-authors">Qingpo Wuwu, Chonghan Gao, <span class="me">Tianyu Chen</span>, Yihang Huang, Yuekai Zhang, Jianing Wang, Jianxin Li, Haoyi Zhou, Shanghang Zhang</div>
+        <div class="pub-links">
+          <a href="https://arxiv.org/abs/2501.12053" target="_blank">arxiv</a>
+        </div>
+      </li>
+    </ul>
+
+    <div class="pub-year-divider">— 2022 – 2023 —</div>
+    <ul class="pub-list">
+      <li class="pub-item">
+        <div class="pub-title">MoEC: Mixture of Expert Clusters <span class="pub-venue">AAAI 2023</span></div>
+        <div class="pub-authors">Yuan Xie, Shaohan Huang, <span class="me">Tianyu Chen</span>, Furu Wei</div>
+        <div class="pub-links">
+          <a href="https://ojs.aaai.org/index.php/AAAI/article/view/26617" target="_blank">paper</a>
+        </div>
+      </li>
+      <li class="pub-item">
+        <div class="pub-title">THE-X: Privacy-Preserving Transformer Inference with Homomorphic Encryption <span class="pub-venue">ACL Findings 2022</span></div>
+        <div class="pub-authors"><span class="me">Tianyu Chen</span>, Hangbo Bao, Shaohan Huang, Li Dong, Binxing Jiao, Daxin Jiang, Haoyi Zhou, Jianxin Li, Furu Wei</div>
+        <div class="pub-links">
+          <a href="https://aclanthology.org/2022.findings-acl.277.pdf" target="_blank">paper</a>
+        </div>
+      </li>
+      <li class="pub-item">
+        <div class="pub-title">Muser: Learning Music Sequence Representation from Text Supervision <span class="pub-venue">ICASSP 2022</span></div>
+        <div class="pub-authors"><span class="me">Tianyu Chen</span>, Yuan Xie, Shuai Zhang, Shaohan Huang, Haoyi Zhou, Jianxin Li</div>
+        <div class="pub-links">
+          <a href="https://ieeexplore.ieee.org/abstract/document/9746131" target="_blank">paper</a>
+        </div>
+      </li>
+      <li class="pub-item">
+        <div class="pub-title">Task-Specific Expert Pruning for Sparse Mixture-of-Experts <span class="pub-venue">Preprint</span></div>
+        <div class="pub-authors"><span class="me">Tianyu Chen</span>, Shaohan Huang, Yuan Xie, Bin Li, Haoyi Zhou, Jianxin Li, Furu Wei</div>
+        <div class="pub-links">
+          <a href="https://arxiv.org/abs/2206.00277" target="_blank">arxiv</a>
+        </div>
+      </li>
+    </ul>
+
+    <div class="pub-year-divider">— 2021 —</div>
+    <ul class="pub-list">
+      <li class="pub-item">
+        <div class="pub-title">Pseudo-label Guided Unsupervised Domain Adaptation of Contextual Embeddings <span class="pub-venue">AdaptNLP@EACL 2021</span></div>
+        <div class="pub-authors"><span class="me">Tianyu Chen</span>, Shaohan Huang, Furu Wei, Jianxin Li</div>
+        <div class="pub-links">
+          <a href="https://aclanthology.org/2021.adaptnlp-1.2/" target="_blank">paper</a>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <div class="section-label">contact</div>
+    <ul class="contact-list">
+      <li>
+        <span class="contact-label">email</span>
+        <span class="contact-value"><a href="#" onclick="revealEmail(event)">tianyuc [at] buaa [dot] edu [dot] cn</a></span>
+      </li>
+      <li>
+        <span class="contact-label">scholar</span>
+        <span class="contact-value"><a href="https://scholar.google.com/citations?user=LAPMGzIAAAAJ&hl=en" target="_blank" rel="noopener">Google Scholar</a></span>
+      </li>
+      <li>
+        <span class="contact-label">github</span>
+        <span class="contact-value"><a href="https://github.com/Tarpelite" target="_blank" rel="noopener">Tarpelite</a></span>
+      </li>
+      <li>
+        <span class="contact-label">platform</span>
+        <span class="contact-value"><a href="https://cnai4s.com/" target="_blank" rel="noopener">CNAI4S</a></span>
+      </li>
+    </ul>
+  </div>
+
+  <footer>
+    <span data-lang="zh">更新于 2026.02 · 托管于 Cloudflare Pages</span>
+    <span data-lang="en">last updated: 2026.02 · hosted on Cloudflare Pages</span>
+  </footer>
+
+</div>
+
+<script>
+function toggleLang() {
+  document.body.classList.toggle('en');
+  try { localStorage.setItem('lang', document.body.classList.contains('en') ? 'en' : 'zh'); } catch(e) {}
+}
+try {
+  const saved = localStorage.getItem('lang');
+  if (saved === 'en') document.body.classList.add('en');
+  else if (!saved && !navigator.language.startsWith('zh')) document.body.classList.add('en');
+} catch(e) {}
+
+function revealEmail(e) {
+  e.preventDefault();
+  const el = e.target;
+  const addr = ['tianyuc', 'buaa.edu.cn'].join('@');
+  el.href = 'mailto:' + addr;
+  el.textContent = addr;
+  el.onclick = null;
+  window.location.href = el.href;
+}
+</script>
+
+</body>
+</html>
