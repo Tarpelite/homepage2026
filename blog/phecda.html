@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智算天玑（Phecda）：用 Jev 式决策加速复杂工业软件求解</title>
+<meta name="description" content="智算天玑（Phecda）：先摸矩阵、再按期望代价排求解顺序的求解器决策模型。北航计算机学院 SCAL 小组。">
+<style>
+:root {
+  --ink: #1C2733; --ink2: #5A6B7E; --line: #E3E9F2;
+  --blue: #2456C4; --verm: #B23A2E; --bg: #FFFFFF; --soft: #F6F8FB;
+  --grid: #E6ECF4;
+  --c-phecda: #c98500; --c-jev: #2a78d6; --c-gbdt: #1baf7a; --c-lr: #4a3aa7; --c-base: #B9C3D0;
+  --serif: Georgia, "Noto Serif SC", "Songti SC", "SimSun", serif;
+  --mono: "Consolas", "SFMono-Regular", monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #E3EAF3; --ink2: #9AABC2; --line: #243650;
+    --blue: #7FA8F0; --verm: #EE7B6B; --bg: #0C1728; --soft: #122238;
+    --grid: #1D2F48;
+    --c-phecda: #c98500; --c-jev: #3987e5; --c-gbdt: #199e70; --c-lr: #9085e9; --c-base: #4A5C75;
+    color-scheme: dark;
+  }
+  figure img { background: #fff; }
+  pre.json { background: #081222 !important; }
+}
+  :root[data-theme="dark"] {
+    --ink: #E3EAF3; --ink2: #9AABC2; --line: #243650;
+    --blue: #7FA8F0; --verm: #EE7B6B; --bg: #0C1728; --soft: #122238;
+    --grid: #1D2F48;
+    --c-phecda: #c98500; --c-jev: #3987e5; --c-gbdt: #199e70; --c-lr: #9085e9; --c-base: #4A5C75;
+    color-scheme: dark;
+  }
+  :root[data-theme="dark"] figure img { background: #fff; }
+  :root[data-theme="dark"] pre.json { background: #081222 !important; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--serif);
+       font-size: 16.5px; line-height: 1.9; }
+.hero { position: relative; min-height: 400px; background: #0F2647;
+        display: flex; align-items: center; justify-content: center; overflow: hidden; }
+#sim { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.9; }
+.hero-inner { position: relative; z-index: 2; text-align: center; padding: 70px 24px;
+              color: #F0F5FC; }
+.hero-badge { display: inline-block; font-family: var(--mono); font-size: 12px;
+              letter-spacing: 3px; border: 1px solid rgba(240,245,252,0.55);
+              border-radius: 999px; padding: 4px 16px; margin-bottom: 22px; }
+.hero h1 { font-size: 38px; letter-spacing: 3px; font-weight: normal;
+           text-shadow: 0 2px 18px rgba(6,20,44,0.6); }
+.hero .sub { margin-top: 14px; font-size: 17px; opacity: 0.92; }
+.hero .byline { margin-top: 26px; font-size: 13.5px; font-family: var(--mono);
+                letter-spacing: 1px; opacity: 0.8; }
+article { max-width: 740px; margin: 0 auto; padding: 46px 22px 80px; }
+article p, article li { text-align: justify; text-justify: inter-ideograph; }
+blockquote { border-left: 3px solid var(--blue); background: var(--soft);
+             padding: 14px 22px; margin: 0 0 36px; color: var(--ink2); font-size: 15.5px; }
+blockquote .en { font-style: italic; }
+h2 { font-size: 22.5px; letter-spacing: 1.5px; font-weight: normal;
+     margin: 46px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+p { margin: 15px 0; }
+strong { color: var(--ink); }
+sup a { font-family: var(--mono); font-size: 11px; color: var(--blue); text-decoration: none; }
+a { color: var(--blue); }
+code { font-family: var(--mono); font-size: 14px; background: var(--soft);
+       padding: 1px 6px; border-radius: 4px; }
+pre.json { font-family: var(--mono); font-size: 13.5px; line-height: 1.7;
+           background: #0F2647; color: #DCE7F5; border-radius: 8px;
+           padding: 18px 22px; overflow-x: auto; margin: 18px 0; }
+pre.json .k { color: #8FB8F0; }
+pre.json .t { color: #7ED8A0; }
+pre.json .g { color: #F2C94C; }
+.tbl-cap { font-size: 14px; color: var(--ink2); margin: 28px 0 6px; }
+.tbl-cap b { color: var(--ink); }
+.tblwrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 8px;
+        border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); }
+thead th { border-bottom: 1px solid var(--ink); font-weight: normal; color: var(--ink2);
+           padding: 7px 8px; }
+td { padding: 6px 8px; }
+tbody tr:first-child td { padding-top: 9px; }
+td.num, th.num { text-align: right; font-family: var(--mono); font-size: 13px; }
+td.hl { color: var(--verm); font-weight: bold; }
+td b { color: var(--ink); }
+figure { margin: 30px 0; text-align: center; }
+figure svg { display: block; width: 100%; height: auto; }
+figure img { max-width: 100%; border: 1px solid var(--line); border-radius: 6px; }
+figcaption { font-size: 13.5px; color: var(--ink2); margin-top: 10px; text-align: left;
+             line-height: 1.7; }
+figcaption b { color: var(--ink); }
+.refs { font-size: 13.5px; color: var(--ink2); line-height: 2.0; }
+.refs li { margin-left: 1.4em; }
+.refs a { word-break: break-all; }
+.sign { text-align: right; color: var(--ink2); margin-top: 46px; line-height: 1.9; }
+.links { background: var(--soft); border: 1px solid var(--line); border-radius: 8px;
+         padding: 14px 20px; font-size: 15px; margin: 20px 0; }
+.rh { font-size: 19px; margin: 44px 0 14px; font-weight: bold; letter-spacing: 0.5px; }
+.rh .no { display: inline-block; width: 26px; height: 26px; line-height: 26px;
+          text-align: center; background: var(--verm); color: #fff; border-radius: 50%;
+          font-family: var(--mono); font-size: 14px; margin-right: 10px; vertical-align: 2px; }
+.rh .hl { background: linear-gradient(transparent 62%, rgba(36,86,196,0.16) 62%); padding: 0 2px; }
+.demo-cta { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center;
+            border: 1px solid var(--line); border-radius: 10px; padding: 16px 20px; margin: 26px 0;
+            background: var(--soft); }
+.demo-cta .t { font-size: 15.5px; line-height: 1.75; }
+.demo-cta a.btn { font-family: var(--mono); font-size: 13.5px; letter-spacing: 1px; text-decoration: none;
+                  background: var(--blue); color: #fff; padding: 8px 16px; border-radius: 999px; white-space: nowrap; }
+.aside-note { font-size: 13.5px; color: var(--ink2); border-top: 1px dashed var(--line); padding-top: 12px; margin-top: 30px; }
+.video-embed { margin: 0 0 34px; scroll-margin-top: 16px; }
+.video-embed video { width: 100%; border-radius: 10px; display: block; background: #0B101B; aspect-ratio: 16 / 9; }
+.anim-note { font-size: 13px; color: var(--ink2); margin-top: 8px; text-align: center; }
+details.fold { margin: 14px 0 20px; }
+details.fold summary { cursor: pointer; color: var(--ink2); font-size: 14.5px; }
+ol.pts { margin: 16px 0 22px; padding-left: 1.9em; }
+ol.pts li { margin: 10px 0; }
+ol.pts li::marker { color: var(--verm); font-family: var(--mono); font-weight: bold; }
+.key { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: 0; margin: 0 4px 0 2px; }
+@media (max-width: 700px) {
+  .hero h1 { font-size: 27px; }
+  article { font-size: 15.5px; }
+  table { font-size: 13px; }
+  th, td { white-space: nowrap; }
+  .rh { font-size: 17px; }
+  .demo-cta { grid-template-columns: minmax(0, 1fr); }
+}
+h3 { font-size: 18px; font-weight: normal; letter-spacing: 1px; margin: 30px 0 10px; }
+.three { border: 1px solid var(--line); border-top: 3px solid var(--c-phecda); border-radius: 8px; background: var(--soft);
+         padding: 16px 22px 8px; margin: 0 0 34px; }
+.three-h { font-weight: bold; letter-spacing: 3px; margin-bottom: 4px; }
+.three ol { padding-left: 1.6em; }
+.three li { margin: 8px 0; font-size: 16px; line-height: 1.85; }
+.three li::marker { color: var(--c-phecda); font-family: var(--mono); font-weight: bold; }
+details.fold.deep { border: 1px solid var(--line); border-radius: 10px; padding: 0; margin: 40px 0 10px; background: var(--bg); }
+details.fold.deep > summary { list-style: none; padding: 14px 20px; font-size: 16px; color: var(--ink); background: var(--soft); border-radius: 10px; }
+details.fold.deep > summary::-webkit-details-marker { display: none; }
+details.fold.deep > summary::before { content: "▸"; color: var(--c-phecda); display: inline-block; width: 1.2em; transition: transform .2s; }
+details.fold.deep[open] > summary::before { transform: rotate(90deg); }
+details.fold.deep[open] > summary { border-bottom: 1px solid var(--line); border-radius: 10px 10px 0 0; }
+.fold-body { padding: 4px 20px 18px; }
+.fold-body h3:first-child { margin-top: 18px; }
+@media (max-width: 700px) { .three { padding: 14px 16px 6px; } .fold-body { padding: 4px 14px 14px; } details.fold.deep > summary { padding: 12px 14px; } }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <canvas id="sim" aria-hidden="true"></canvas>
+  <div class="hero-inner">
+    <div class="hero-badge">PREVIEW</div>
+    <h1>智算天玑 Phecda</h1>
+    <div class="sub">用 Jev 式决策加速复杂工业软件求解</div>
+    <div class="byline">北航 SCAL 小组   2026 年 9 月</div>
+  </div>
+</div>
+
+<article>
+<blockquote>
+  <div class="en">The purpose of computing is insight, not numbers.</div>
+  <div>计算的目的是洞察，而不是数字。（Richard Hamming）</div>
+</blockquote>
+<div class="video-embed" id="launch">
+<video src="phecda_launch.mp4" poster="phecda_launch_poster.jpg" controls playsinline preload="metadata"></video>
+<div class="anim-note">智算天玑发布视频，约两分钟，有配乐。</div>
+</div>
+<div class="three"><div class="three-h">三句话看懂天玑</div>
+<ol>
+<li>工业软件每解一次方程组，都要先挑求解器。挑错了，一秒能解完的题会拖上几十秒，甚至解不出来。今天这件事靠老师傅的手感，我们管它叫工业软件界的“炼丹”。</li>
+<li>天玑是求解器的“查询优化器”。它先让矩阵试跑几十步，再给每个求解器报一个成功概率；代码按期望代价排出先后，失败就自动换下一个。</li>
+<li>在 SuiteSparse 的 117 个真实矩阵上，天玑判断得比通用决策模型 Jev 准，Brier 分数低 38%。在另一批 46 个能解出来的真实矩阵上，按它排的顺序求解，总耗时不到固定默认顺序的四成，试跑的时间也算在里面。</li>
+</ol></div>
+
+<h2>同一道题，一秒还是四十六秒</h2>
+<p>先看一道真题。SuiteSparse 矩阵库里有一个陀螺仪的刚度矩阵，叫 gyro_k，一万七千多个未知数。按固定的默认顺序，先上代数多重网格。它磨了 46 秒，残差几乎没动，宣告失败。换成直接法，1.1 秒解完。</p>
+<p>这样的事在工业软件里很常见。有限元、流体、电路仿真，算到最后都是在解稀疏线性方程组。不可压流动里，光是压力方程就常常吃掉六到九成的计算时间<sup><a href="#refs">[17]</a></sup>。在 CFD 软件的求解设置里，压力方程那一段通常只有几行，用什么求解器，配什么预条件器，光滑器选哪个。以开源的 OpenFOAM 为例，就是 system/fvSolution 文件里 p 的那一段。这几行填得好不好，决定了算得快慢，有时还决定了算不算得出来。</p>
+<p>这几行怎么填，多数团队靠老师傅。老师傅的经验很值钱，却写不进文档。换一套网格、换一种材料，他也得重新试。人一走，经验也跟着走了。配方在人手里，火候全凭感觉，这就是我们说的“炼丹”。每一家用仿真的单位都在为它交学费，交的是工程师的时间，还有集群的机时。</p>
+
+<h2>Jev 读文字，天玑先摸矩阵</h2>
+<p>9 月 15 日，TypeSafe 发布了决策模型 Jev<sup><a href="#refs">[1]</a></sup>。它的用法和聊天机器人不同。交给它一份状态和几道带类型的问题，是非题、选择题或分档题，它一次算完，直接返回每道题的概率，一个字也不写。TypeSafe 把它叫作 System One 模型，借的是“快思考”的说法。天玑也是快判断，但它是读过求解器日志的那种快。</p>
+<p>这个接口很适合求解器决策。先试哪个求解器，本来就该看概率：有多大把握成功，失败了要赔多少时间。可 Jev 是通用模型，没见过求解器。给它一段矩阵的文字描述和几项统计量，它只能凭常识猜。</p>
+<p>天玑留下了 Jev 的接口，换掉了内核，又补上两样东西。一样是探针，判断之前先让矩阵试跑几十步。另一样是一座数据工厂，拿求解器真跑出来的结果当训练标签。模型结构沿用社区开源的 Open-Jev-9B<sup><a href="#refs">[2]</a><a href="#refs">[3]</a></sup>，底座是 Qwen3.5-9B<sup><a href="#refs">[6]</a></sup>。</p>
+
+<h2>先跑一小段，再下判断</h2>
+<p>编译器有一招叫 profile-guided optimization。先把程序跑一小段，看热点在哪，再决定怎么优化。天玑的探针做的是同一件事。</p>
+<p>探针分三步。第一步，用最便宜的 Jacobi 预条件跑 20 步共轭梯度，看残差降得多快，顺手估出条件数，还能发现矩阵是不是不定。第二步，把多重网格的层级搭起来试跑 15 步，看它推不推得动残差，粗网格能不能罩住最难消的那部分误差。第三步，把最难消的误差单独拎出来，看它能不能用常向量这样的简单模式解释。</p>
+<p>回到陀螺仪那道题。探针看到，多重网格每一步只能把残差降到原来的 0.98，粗网格只罩住了 22% 的慢误差。这等于提前知道多重网格会卡住。天玑于是把直接法排在第一位，算上 4.3 秒探针，5.4 秒解完。默认顺序花了 47 秒。</p>
+<p>探针不是免费的。大矩阵上，它可能要几十秒。这笔账后面会算清楚。</p>
+
+<h2>答案跑一遍就知道</h2>
+<p>大模型这两年在数学和代码上进步很快，一个常被提到的原因是答案能自动核对。数学题对一下答案，代码跑一遍测试，对错立判。这类训练信号叫可验证奖励。</p>
+<p>求解器决策天生就是这样的题。某个求解器能不能在预算内解出来，要多少步，花几秒，跑一遍就知道，不用任何人标注。数据能有多少，只看算力有多少。</p>
+<p>我们据此搭了一座数据工厂（图 1）。一边用 13 族生成器出题，覆盖扩散、线弹性、对流扩散、Helmholtz、薄壁壳等问题，共 4,087 道，最大的有 79 万未知数。一边从 SuiteSparse 收来 544 个真实矩阵，一部分进训练，其余留作考题。每道题都用 5 个求解器配置在同一预算下真跑一遍，成败、步数和耗时记下来，就是标签。</p>
+<p>图里还有一条回流的虚线。天玑每在真实环境里指挥一次求解，结果就是一条新标签，可以直接拿回来继续训练。老师傅的经验留不住，这份经验能留下来。对做产品的人来说，这就是数据飞轮：用得越多，攒下的标签越多。</p>
+<div class="flowviz">
+<style>
+.flowviz { margin: 34px 0 6px; }
+.flowviz svg { display: block; width: 100%; height: auto; }
+.flowviz text { font-family: Georgia, "Noto Serif SC", "Songti SC", "SimSun", serif; }
+.flowviz .fz-mono { font-family: Consolas, "SFMono-Regular", monospace; }
+.flowviz .fz-t { font-size: 13px; fill: var(--ink); }
+.flowviz .fz-sub { font-size: 10.5px; fill: var(--ink2); }
+.flowviz .fz-lab { font-size: 13px; letter-spacing: 2.5px; }
+.flowviz .fz-cap { font-size: 13.5px; color: var(--ink2); margin: 12px 2px 0; line-height: 1.85; text-align: left; }
+.flowviz .fz-band-a { fill: var(--soft); stroke: var(--line); stroke-width: 1; }
+.flowviz .fz-band-b { fill: var(--soft); stroke: var(--line); stroke-width: 1; }
+.flowviz .fz-card { fill: var(--bg); stroke: var(--line); stroke-width: 1.5; }
+.flowviz .fz-card-b { fill: var(--bg); stroke: var(--blue); stroke-width: 1.5; }
+.flowviz .fz-card-hl { fill: var(--bg); stroke: var(--c-phecda); stroke-width: 2.2; }
+.flowviz .fz-line { stroke: var(--ink2); stroke-width: 1.4; fill: none; stroke-linecap: round; }
+.flowviz .fz-line-b { stroke: var(--blue); stroke-width: 1.4; fill: none; stroke-linecap: round; }
+.flowviz .fz-loop { stroke: var(--c-phecda); stroke-width: 1.6; fill: none; stroke-dasharray: 6 6; }
+.flowviz .fz-flow { animation: fz-flow 1.6s linear infinite; }
+@keyframes fz-flow { to { stroke-dashoffset: -24; } }
+@media (prefers-reduced-motion: reduce) { .flowviz * { animation: none !important; } }
+</style>
+<svg viewBox="0 0 890 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="天玑的数据工厂与在线决策流程">
+  <defs>
+    <marker id="fz-m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink2)"/></marker>
+    <marker id="fz-mb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--blue)"/></marker>
+    <marker id="fz-mg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--c-phecda)"/></marker>
+  </defs>
+  <rect class="fz-band-a" x="8" y="40" width="874" height="190" rx="14"/>
+  <rect class="fz-band-b" x="8" y="318" width="874" height="190" rx="14"/>
+  <text class="fz-lab" x="26" y="64" fill="var(--ink2)">离线：数据工厂（标签靠算力造）</text>
+  <text class="fz-lab" x="26" y="342" fill="var(--blue)">在线：一次决策</text>
+  <g><rect class="fz-card" x="22" y="100" width="150" height="72" rx="10"/><text class="fz-t" x="97" y="128" text-anchor="middle">合成题与真实矩阵</text><text class="fz-sub" x="97" y="150" text-anchor="middle">13 族生成器，SuiteSparse</text></g>
+  <g><rect class="fz-card" x="196" y="100" width="150" height="72" rx="10"/><text class="fz-t" x="271" y="128" text-anchor="middle">求解器菜单真跑</text><text class="fz-sub" x="271" y="150" text-anchor="middle">5 个配置，同一预算</text></g>
+  <g><rect class="fz-card" x="370" y="100" width="150" height="72" rx="10"/><text class="fz-t" x="445" y="128" text-anchor="middle">结果即标签</text><text class="fz-sub" x="445" y="150" text-anchor="middle">成败、谁最快、几步</text></g>
+  <g><rect class="fz-card" x="544" y="100" width="150" height="72" rx="10"/><text class="fz-t" x="619" y="128" text-anchor="middle">写成状态 s</text><text class="fz-sub" x="619" y="150" text-anchor="middle">特征、探针、文字描述</text></g>
+  <g><rect class="fz-card-hl" x="718" y="100" width="150" height="72" rx="10"/><text class="fz-t" x="793" y="128" text-anchor="middle">训练天玑</text><text class="fz-sub" x="793" y="150" text-anchor="middle">交叉熵加 Brier</text></g>
+  <path class="fz-line" d="M172,136 L192,136" marker-end="url(#fz-m)"/><path class="fz-line" d="M346,136 L366,136" marker-end="url(#fz-m)"/>
+  <path class="fz-line" d="M520,136 L540,136" marker-end="url(#fz-m)"/><path class="fz-line" d="M694,136 L714,136" marker-end="url(#fz-m)"/>
+  <g><rect class="fz-card-b" x="22" y="382" width="128" height="72" rx="10"/><text class="fz-t" x="86" y="410" text-anchor="middle">矩阵与描述</text><text class="fz-sub" x="86" y="432" text-anchor="middle">工程师或智能体提交</text></g>
+  <g><rect class="fz-card-b" x="168" y="382" width="128" height="72" rx="10"/><text class="fz-t" x="232" y="410" text-anchor="middle">代码算特征</text><text class="fz-sub" x="232" y="432" text-anchor="middle">规模、对称、对角占优</text></g>
+  <g><rect class="fz-card-hl" x="314" y="382" width="128" height="72" rx="10"/><text class="fz-t" x="378" y="410" text-anchor="middle">探针</text><text class="fz-sub" x="378" y="432" text-anchor="middle">试跑、估谱、慢模态</text></g>
+  <g><rect class="fz-card-hl" x="460" y="382" width="128" height="72" rx="10"/><text class="fz-t" x="524" y="410" text-anchor="middle">天玑一次前向</text><text class="fz-sub" x="524" y="432" text-anchor="middle">带类型问题的概率</text></g>
+  <g><rect class="fz-card-b" x="606" y="382" width="128" height="72" rx="10"/><text class="fz-t" x="670" y="410" text-anchor="middle">按期望代价排序</text><text class="fz-sub" x="670" y="432" text-anchor="middle">概率乘典型耗时</text></g>
+  <g><rect class="fz-card-b" x="752" y="382" width="116" height="72" rx="10"/><text class="fz-t" x="810" y="410" text-anchor="middle">按序真跑</text><text class="fz-sub" x="810" y="432" text-anchor="middle">失败就回退</text></g>
+  <path class="fz-line-b" d="M150,418 L164,418" marker-end="url(#fz-mb)"/><path class="fz-line-b" d="M296,418 L310,418" marker-end="url(#fz-mb)"/>
+  <path class="fz-line-b" d="M442,418 L456,418" marker-end="url(#fz-mb)"/><path class="fz-line-b" d="M588,418 L602,418" marker-end="url(#fz-mb)"/><path class="fz-line-b" d="M734,418 L748,418" marker-end="url(#fz-mb)"/>
+  <path class="fz-loop fz-flow" d="M810,454 C810,540 470,540 470,300 C470,250 445,240 445,176" marker-end="url(#fz-mg)"/>
+  <text class="fz-sub" x="600" y="528" style="fill:var(--c-phecda)">真跑的结果本身就是新标签，回流进数据工厂</text>
+  <path class="fz-line" d="M793,172 C793,260 524,300 524,378" stroke-dasharray="3 5" marker-end="url(#fz-m)"/>
+  <text class="fz-sub" x="660" y="262">训好的权重</text>
+</svg>
+<p class="fz-cap"><b>图 1</b> 天玑的数据工厂与一次在线决策。上一行离线生成题目、真跑求解器菜单，把运行结果写成标签，把特征、探针和文字描述写成状态。下一行是一次决策：代码先算特征、跑探针，天玑给出每个带类型问题的概率，代码按期望代价排出求解顺序并执行。执行结果回流为新的训练样本。</p>
+</div>
+
+
+<h2>求解器的查询优化器</h2>
+<p>数据库收到一条 SQL，并不照字面直接执行。查询优化器先看表的统计信息，再用代价模型比较几种执行计划，挑预计最省的那个。天玑站的就是这个位置。探针读数相当于统计信息。天玑给出每个求解器的成功概率，代码再按期望代价排出尝试顺序。</p>
+<p>期望代价把两件事放在一起算：成功的把握有多大，失败了要赔多少时间。一个很有把握但很慢的求解器，可能会排在一个把握一般但很快的后面，因为后者值得先试一下。代码把 5 个配置的 120 种先后顺序全算一遍，取期望代价最小的那条。</p>
+<p>失败了就自动换下一个，也就是工程里常说的 fallback。模型只报概率，排序和执行都由代码负责。每次求解都核验真实残差，所以就算天玑全猜错，最坏也只是把菜单挨个试一遍，不会交出一个错的解。</p>
+<p>接进现有软件，改动也不大。天玑以插件的形式挂在已有求解器前面，核心就是下面十几行。<code>features</code>、<code>probe</code>、<code>build_state</code>、<code>best_order</code> 是我们脚本里的函数，<code>phecda</code> 是天玑的一次前向，输入输出与 Jev 的 <code>/v1/systemone</code> 同形。放到 CFD 软件里，天玑要填的就是求解设置里压力方程那几行：solver、preconditioner、smoother。天玑 PlayGround 演示的正是这个过程。</p>
+<pre class="json"><span class="k">from</span> scipy.sparse.linalg <span class="k">import</span> cg, splu; <span class="k">import</span> pyamg
+amg = <span class="k">lambda</span> A: pyamg.smoothed_aggregation_solver(A).aspreconditioner()
+MENU = {<span class="g">"amg_cg"</span>:    <span class="k">lambda</span> A, b: cg(A, b, rtol=1e-8, maxiter=500, M=amg(A)),
+        <span class="g">"direct_lu"</span>: <span class="k">lambda</span> A, b: (splu(A.tocsc()).solve(b), 0)}   <span class="t"># 其余配置、PETSc 同理</span>
+<span class="k">def</span> <span class="g">solve_sparse</span>(A, b, description=""):
+    f = features(A)                                         <span class="t"># 数字特征</span>
+    r = probe(A, f["block_size_detected"], f["asym_rel"])   <span class="t"># 探针</span>
+    p = phecda(build_state(f, description, r), QUESTIONS)   <span class="t"># 天玑：概率</span>
+    <span class="k">for</span> name <span class="k">in</span> best_order(p, f):                           <span class="t"># 期望代价排序</span>
+        x, info = MENU[name](A, b)
+        <span class="k">if</span> info == 0 <span class="k">and</span> norm(b - A @ x) &lt;= 1e-8 * norm(b):  <span class="t"># 核验真残差</span>
+            <span class="k">return</span> x, {"engine": name, "probe_s": r["time_s"]}
+    <span class="k">raise</span> RuntimeError("菜单里的配置都失败了")               <span class="t"># 否则退到下一个</span></pre>
+
+<h2>成绩单</h2>
+<p>先说判断准不准。我们用 Brier 分数来量：说九成会成的事，最好真有九成成了。它同时奖励判得对和报得实，越低越好。</p>
+<p>我们的考卷是 SuiteSparse 里 117 个对称正定矩阵。在考卷上，天玑的 Brier 分数是 0.089，读同一份状态的 Jev 是 0.143，低了 38%，差值的 95% 置信区间不跨 0。再换一批 68 个真实矩阵，它们同样来自 SuiteSparse，但和考卷不在同一个 group（可以理解为不同的来源），以非对称和不定矩阵为主。天玑依然领先，0.105 对 0.135（图 2）。</p>
+<figure><div><svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg" role="img">
+<line x1="52" y1="222.0" x2="628" y2="222.0" stroke="var(--grid)"/>
+<text x="46" y="226.0" text-anchor="end" font-size="10.5" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">0.00</text>
+<line x1="52" y1="174.0" x2="628" y2="174.0" stroke="var(--grid)"/>
+<text x="46" y="178.0" text-anchor="end" font-size="10.5" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">0.09</text>
+<line x1="52" y1="126.0" x2="628" y2="126.0" stroke="var(--grid)"/>
+<text x="46" y="130.0" text-anchor="end" font-size="10.5" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">0.17</text>
+<line x1="52" y1="78.0" x2="628" y2="78.0" stroke="var(--grid)"/>
+<text x="46" y="82.0" text-anchor="end" font-size="10.5" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">0.26</text>
+<line x1="52" y1="30.0" x2="628" y2="30.0" stroke="var(--grid)"/>
+<text x="46" y="34.0" text-anchor="end" font-size="10.5" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">0.34</text>
+<rect x="154.0" y="172.6" width="26.0" height="49.4" rx="2" fill="var(--c-phecda)"/>
+<rect x="182.0" y="142.3" width="26.0" height="79.7" rx="2" fill="var(--c-jev)"/>
+<rect x="210.0" y="55.0" width="26.0" height="167.0" rx="2" fill="var(--c-base)"/>
+<text x="196.0" y="239.0" text-anchor="middle" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">SuiteSparse 考卷</text>
+<text x="196.0" y="254.0" text-anchor="middle" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">117 题</text>
+<rect x="442.0" y="163.6" width="26.0" height="58.4" rx="2" fill="var(--c-phecda)"/>
+<rect x="470.0" y="146.7" width="26.0" height="75.3" rx="2" fill="var(--c-jev)"/>
+<rect x="498.0" y="57.4" width="26.0" height="164.6" rx="2" fill="var(--c-base)"/>
+<text x="484.0" y="239.0" text-anchor="middle" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">其他 group 的真实矩阵</text>
+<text x="484.0" y="254.0" text-anchor="middle" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">68 题</text>
+<rect x="52" y="6" width="12" height="12" rx="2" fill="var(--c-phecda)"/>
+<text x="69" y="16" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">天玑</text>
+<rect x="108" y="6" width="12" height="12" rx="2" fill="var(--c-jev)"/>
+<text x="125" y="16" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">Jev，读同一份状态</text>
+<rect x="268" y="6" width="12" height="12" rx="2" fill="var(--c-base)"/>
+<text x="285" y="16" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">按基率猜</text>
+<text x="628" y="16" text-anchor="end" font-size="11.5" fill="var(--ink2)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">Brier，越低越好</text>
+</svg></div>
+<figcaption><b>图 2</b> 真实矩阵上“能否收敛”五道是非题合并的 Brier 分数，越低越好。天玑和 Jev 读的是同一份带探针读数的状态。</figcaption></figure>
+<p>天玑还有一个长处：一个模型回答所有问题。问题写在输入里，换个问法不用重新训练。训练时从没出现过的两个求解器配置，BiCGSTAB 和 AMG 预条件的 GMRES，天玑在真实矩阵上也判得比 Jev 准（0.047 对 0.077，0.049 对 0.082）。为每个问题单独训练的梯度提升树，在它训过的问题上和天玑打成平手，这两道新题它却根本答不了。</p>
+<p>再说省不省时间。后面这 68 个真实矩阵里，有 46 个至少有一个配置能在预算内解出来。我们按各方法排出的顺序依次真跑，失败的尝试按实际耗时算，探针的时间也算进去（图 3）。天玑一共花了 841 秒，其中探针 370 秒。固定默认顺序花了 2,260 秒，是天玑的 2.7 倍。默认顺序先试多重网格，而这批矩阵大多不对称或不定，多重网格很少成功，每失败一次就白等一段。</p>
+<figure><div><svg viewBox="0 0 640 144" xmlns="http://www.w3.org/2000/svg" role="img">
+<text x="190" y="23.0" text-anchor="end" font-size="13" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">事后最优</text>
+<rect x="200" y="8" width="48.3" height="22" rx="3" fill="var(--ink)"/>
+<text x="254.3" y="23.0" font-size="12" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">340 秒</text>
+<text x="190" y="55.0" text-anchor="end" font-size="13" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif" font-weight="bold">天玑（含探针 370 秒）</text>
+<rect x="200" y="40" width="119.6" height="22" rx="3" fill="var(--c-phecda)"/>
+<text x="325.6" y="55.0" font-size="12" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">841 秒</text>
+<text x="190" y="87.0" text-anchor="end" font-size="13" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">Jev，读同一份状态</text>
+<rect x="200" y="72" width="132.3" height="22" rx="3" fill="var(--c-jev)"/>
+<text x="338.3" y="87.0" font-size="12" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">930 秒</text>
+<text x="190" y="119.0" text-anchor="end" font-size="13" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">固定默认顺序</text>
+<rect x="200" y="104" width="321.4" height="22" rx="3" fill="var(--c-base)"/>
+<text x="527.4" y="119.0" font-size="12" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">2,260 秒</text>
+</svg></div>
+<figcaption><b>图 3</b> 其他 group 的 46 个可解真实矩阵上，按各方法排出的顺序依次真跑的总墙钟时间，越短越好。事后最优是每题直接选中最快配置的耗时。</figcaption></figure>
+<p>这个 2.7 倍有明确的范围，只在这 46 个矩阵上成立。换到考卷那 117 个对称正定矩阵上，账就没这么好看，探针本身也还没回本。这些不好看的数字，都放在文末的折叠区里。</p>
+<div class="demo-cta"><div class="t"><strong>天玑 PlayGround</strong> 是一个示意的求解工作台，天玑以浮动卡片的形式嵌在里面。挑一道题，看卡片怎么摸矩阵、怎么排序，一键把配置填进求解设置，再看残差监视器回放真实的收敛曲线。十道题全部来自真实运行，也包括天玑看走眼的那一道。</div><a class="btn" href="phecda_demo.html">打开天玑 PlayGround</a></div>
+
+<h2>下一步：给大模型一双摸矩阵的手</h2>
+<p>多模态模型给大模型装上了眼睛。天玑想给它装上一双能摸矩阵的手。今天的天玑，还是先把探针读数写成数字和文字，再交给语言模型去读。我们更想做的，是把矩阵本身当成一种模态，让模型直接读它的结构和谱。</p>
+<p>在智算星座里，天璇 OmniArch<sup><a href="#refs">[15]</a></sup>端到端地预测解场，玉衡 Alioth<sup><a href="#refs">[16]</a></sup>生成求解器组件，天玑负责判断该交给谁、失败了退到哪里。</p>
+<p>接下来我们会把数据生成器、求解器菜单和全部标签开源，并放出天玑的 LoRA 权重。</p>
+
+<details class="fold deep" id="nerd"><summary>给较真的读者：我们还没做好的事、完整表格和方法细节</summary>
+<div class="fold-body">
+
+<h3>我们还没做好的事</h3>
+<p>下面这些，是天玑现在还做得不好的地方。每一条都有数字。</p>
+<ol class="pts">
+<li><strong>探针还没回本。</strong>在正文那 46 个真实矩阵上，不带探针的天玑只要 447 秒，比带探针的 841 秒还快；不带探针的逻辑回归也只要 464 秒。探针让判断变准了，自己的开销却还没挣回来。SuiteSparse 考卷的 63 道可解题上更明显：带探针的天玑要 3,579 秒，其中探针 1,177 秒，比固定默认顺序的 2,858 秒还慢；最快的是不带探针的逻辑回归，1,535 秒；事后最优是 943 秒。考卷上探针的中位耗时是 24 秒，大矩阵上的多重网格试跑常常用满 60 秒上限。同一个矩阵如果要反复求解，比如多个右端项或多个时间步，探针只需做一次，开销会被摊薄。这一点我们还没有实测。</li>
+<li><strong>梯度提升树不服。</strong>在它训练过的问题上，逐题训练的梯度提升树（GBDT）和天玑不分胜负。考卷上天玑略好（0.089 对 0.104），其他 group 的真实矩阵上 GBDT 略好（0.094 对 0.105），两处差值的置信区间都跨 0。“哪个配置最快”这道选择题，GBDT 明显更好，考卷上 Brier 分数 0.427 对 0.530。</li>
+<li><strong>没见过的问题，不是都能答。</strong>训练里从没问过内存。问“直接法会不会超出内存”，天玑在真实矩阵上的 Brier 分数是 0.330，比按基率猜的 0.054 还差。它把“内存超限”和“直接法失败”当成了一回事，两者的概率在考卷上相关系数达 0.88，超时的题也被判成了内存超限。合成测试集上，五项新问题和新配置里有三项输给 Jev。</li>
+<li><strong>只给文字，天玑就懵了。</strong>把状态里的数字全部拿掉、只留一段文字描述，天玑在真实矩阵上的 Brier 分数是 0.266，比 Jev 的 0.230 还差，两者离按基率猜都不远。文字描述到底有没有用，目前还拿不出证据。</li>
+<li><strong>天玑也会看走眼。</strong>PlayGround 里的曲轴段矩阵 crankseg_1 就是一例。天玑先后押了两种多重网格，各自撞上 120 秒上限，最后才换到直接法，一共 381 秒。Jev 读同一份状态，一上来就选了直接法，141 秒。固定默认顺序也只要 222 秒。</li>
+<li><strong>温度只在 35 个矩阵上拟合。</strong>校准用的这批真实矩阵以非对称为主，和考卷分布不同。温度缩放让“最快”选择题变差了，也让 GBDT 的收敛 Brier 变差了（见表 1 注）。</li>
+<li><strong>还没进过真正的 CFD 软件。</strong>PlayGround 是示意界面，矩阵来自 SuiteSparse 和我们的合成题，求解由 SciPy 与 PyAMG 执行。天玑还没有接进 OpenFOAM 或任何商业软件做过实测。</li>
+<li><strong>其他小账。</strong>接近 120 秒上限的标签会受机器负载影响。样本量有限，考卷上不少结论的置信区间偏宽。训练按时间预算停在计划 735 步中的第 662 步。</li>
+</ol>
+
+
+<h3>实验怎么做的</h3>
+<p><strong>测试集。</strong>SuiteSparse 考卷是 117 个对称正定矩阵，规模最大 156 万未知数；其中 58 个所在的 group 有别的矩阵进入了训练，59 个没有。其他 group 的真实测试集有 68 个矩阵，以非对称和对称不定为主。合成测试集是 274 道留出的合成题。</p>
+<p><strong>对照方法。</strong>（1）Jev 零样本：用公开 API 读取与天玑完全相同的状态和问题（版本 jev-1.13.0）。（2）梯度提升树（GBDT）与（3）逻辑回归（LR）：以数字特征和探针的数值结果为输入，每个问题单独训练一个模型，训练数据与天玑相同。（4）基率：按训练集频率给概率。每种方法都有带探针和不带探针两个版本；天玑、GBDT 与 LR 都在真实矩阵校准集上做温度缩放<sup><a href="#refs">[10]</a></sup>。</p>
+<p><strong>指标。</strong>Brier 分数<sup><a href="#refs">[8]</a></sup>是预测概率与实际结果之差的平方均值，越低越好。AUC 衡量排序能力。ECE 衡量校准，即各分箱里预测概率与实际频率的平均差距。正文报告五个“能否收敛”问题合并后的 Brier 分数。路由模拟在可解题上按各方法的顺序依次真跑，失败的尝试按实际耗时计入，单次上限 120 秒，带探针的方法计入探针耗时。</p>
+
+<h3>完整成绩单</h3>
+<figure><div><svg viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg" role="img">
+<line x1="52" y1="242.0" x2="668" y2="242.0" stroke="var(--grid)"/>
+<text x="46" y="246.0" text-anchor="end" font-size="10.5" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">0.00</text>
+<line x1="52" y1="189.0" x2="668" y2="189.0" stroke="var(--grid)"/>
+<text x="46" y="193.0" text-anchor="end" font-size="10.5" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">0.09</text>
+<line x1="52" y1="136.0" x2="668" y2="136.0" stroke="var(--grid)"/>
+<text x="46" y="140.0" text-anchor="end" font-size="10.5" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">0.17</text>
+<line x1="52" y1="83.0" x2="668" y2="83.0" stroke="var(--grid)"/>
+<text x="46" y="87.0" text-anchor="end" font-size="10.5" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">0.26</text>
+<line x1="52" y1="30.0" x2="668" y2="30.0" stroke="var(--grid)"/>
+<text x="46" y="34.0" text-anchor="end" font-size="10.5" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">0.34</text>
+<rect x="84.7" y="187.5" width="26.0" height="54.5" rx="2" fill="var(--c-phecda)"/>
+<rect x="112.7" y="154.0" width="26.0" height="88.0" rx="2" fill="var(--c-jev)"/>
+<rect x="140.7" y="177.7" width="26.0" height="64.3" rx="2" fill="var(--c-gbdt)"/>
+<rect x="168.7" y="153.8" width="26.0" height="88.2" rx="2" fill="var(--c-lr)"/>
+<rect x="196.7" y="57.7" width="26.0" height="184.3" rx="2" fill="var(--c-base)"/>
+<text x="154.7" y="259.0" text-anchor="middle" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">SuiteSparse 考卷</text>
+<text x="154.7" y="274.0" text-anchor="middle" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">117 题</text>
+<rect x="290.0" y="177.5" width="26.0" height="64.5" rx="2" fill="var(--c-phecda)"/>
+<rect x="318.0" y="158.8" width="26.0" height="83.2" rx="2" fill="var(--c-jev)"/>
+<rect x="346.0" y="183.9" width="26.0" height="58.1" rx="2" fill="var(--c-gbdt)"/>
+<rect x="374.0" y="176.9" width="26.0" height="65.1" rx="2" fill="var(--c-lr)"/>
+<rect x="402.0" y="60.3" width="26.0" height="181.7" rx="2" fill="var(--c-base)"/>
+<text x="360.0" y="259.0" text-anchor="middle" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">真实测试</text>
+<text x="360.0" y="274.0" text-anchor="middle" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">68 题</text>
+<rect x="495.3" y="202.8" width="26.0" height="39.2" rx="2" fill="var(--c-phecda)"/>
+<rect x="523.3" y="113.0" width="26.0" height="129.0" rx="2" fill="var(--c-jev)"/>
+<rect x="551.3" y="192.4" width="26.0" height="49.6" rx="2" fill="var(--c-gbdt)"/>
+<rect x="579.3" y="167.7" width="26.0" height="74.3" rx="2" fill="var(--c-lr)"/>
+<rect x="607.3" y="124.1" width="26.0" height="117.9" rx="2" fill="var(--c-base)"/>
+<text x="565.3" y="259.0" text-anchor="middle" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">合成测试</text>
+<text x="565.3" y="274.0" text-anchor="middle" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">274 题</text>
+<rect x="52" y="6" width="12" height="12" rx="2" fill="var(--c-phecda)"/>
+<text x="69" y="16" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">天玑</text>
+<rect x="108" y="6" width="12" height="12" rx="2" fill="var(--c-jev)"/>
+<text x="125" y="16" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">Jev</text>
+<rect x="177" y="6" width="12" height="12" rx="2" fill="var(--c-gbdt)"/>
+<text x="194" y="16" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">GBDT</text>
+<rect x="259" y="6" width="12" height="12" rx="2" fill="var(--c-lr)"/>
+<text x="276" y="16" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">LR</text>
+<rect x="315" y="6" width="12" height="12" rx="2" fill="var(--c-base)"/>
+<text x="332" y="16" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">基率</text>
+<text x="668" y="16" text-anchor="end" font-size="11.5" fill="var(--ink2)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">Brier，越低越好</text>
+</svg></div>
+<figcaption><b>图 4</b> 三个测试集上五个“能否收敛”问题合并的 Brier 分数（带探针）。天玑在考卷和合成测试集上最低；在其他 group 的真实矩阵上，GBDT 略低于天玑。</figcaption></figure>
+<div class="tbl-cap"><b>表 1</b> 主结果（带探针）。“收敛”为五个“能否收敛”问题合并，“最快”为六选一的选择题。每个测试集内收敛 Brier 最低者加粗。未做温度缩放时，GBDT 在考卷、真实测试集和合成测试集上的收敛 Brier 分别为 0.080、0.098、0.042，天玑分别为 0.088、0.111、0.062。</div>
+<div class="tblwrap"><table><thead><tr><th style="text-align:left">数据集</th><th style="text-align:left">方法</th><th class="num">收敛 Brier ↓</th><th class="num">收敛 AUC ↑</th><th class="num">收敛 ECE ↓</th><th class="num">最快 Brier ↓</th><th class="num">最快 准确率 ↑</th></tr></thead><tbody>
+<tr><td>SuiteSparse 考卷</td><td>天玑</td><td class="num"><b>0.089</b></td><td class="num">0.937</td><td class="num">0.045</td><td class="num">0.530</td><td class="num">0.718</td></tr>
+<tr><td></td><td>Jev 零样本</td><td class="num">0.143</td><td class="num">0.881</td><td class="num">0.122</td><td class="num">0.710</td><td class="num">0.479</td></tr>
+<tr><td></td><td>GBDT</td><td class="num">0.104</td><td class="num">0.945</td><td class="num">0.127</td><td class="num">0.427</td><td class="num">0.718</td></tr>
+<tr><td></td><td>LR</td><td class="num">0.143</td><td class="num">0.882</td><td class="num">0.136</td><td class="num">0.638</td><td class="num">0.581</td></tr>
+<tr><td></td><td>基率</td><td class="num">0.299</td><td class="num">0.594</td><td class="num">0.272</td><td class="num">0.845</td><td class="num">0.197</td></tr>
+<tr><td>真实测试（其他 group）</td><td>天玑</td><td class="num">0.105</td><td class="num">0.934</td><td class="num">0.076</td><td class="num">0.611</td><td class="num">0.574</td></tr>
+<tr><td></td><td>Jev 零样本</td><td class="num">0.135</td><td class="num">0.875</td><td class="num">0.053</td><td class="num">0.653</td><td class="num">0.485</td></tr>
+<tr><td></td><td>GBDT</td><td class="num"><b>0.094</b></td><td class="num">0.955</td><td class="num">0.065</td><td class="num">0.508</td><td class="num">0.574</td></tr>
+<tr><td></td><td>LR</td><td class="num">0.106</td><td class="num">0.930</td><td class="num">0.052</td><td class="num">0.660</td><td class="num">0.515</td></tr>
+<tr><td></td><td>基率</td><td class="num">0.295</td><td class="num">0.624</td><td class="num">0.300</td><td class="num">0.773</td><td class="num">0.426</td></tr>
+<tr><td>合成测试</td><td>天玑</td><td class="num"><b>0.064</b></td><td class="num">0.969</td><td class="num">0.044</td><td class="num">0.531</td><td class="num">0.697</td></tr>
+<tr><td></td><td>Jev 零样本</td><td class="num">0.209</td><td class="num">0.815</td><td class="num">0.231</td><td class="num">0.885</td><td class="num">0.336</td></tr>
+<tr><td></td><td>GBDT</td><td class="num">0.080</td><td class="num">0.955</td><td class="num">0.142</td><td class="num">0.375</td><td class="num">0.755</td></tr>
+<tr><td></td><td>LR</td><td class="num">0.121</td><td class="num">0.931</td><td class="num">0.168</td><td class="num">0.655</td><td class="num">0.668</td></tr>
+<tr><td></td><td>基率</td><td class="num">0.191</td><td class="num">0.698</td><td class="num">0.086</td><td class="num">0.751</td><td class="num">0.321</td></tr>
+</tbody></table></div>
+<div class="tbl-cap"><b>表 2</b> 考卷按“该题所在 group 是否有其他矩阵进入训练”拆开后的收敛 Brier 分数（带探针）。没进过训练的那一半反而更准，GBDT 也一样，说明两半难度不同，没有看到泄漏的迹象。</div>
+<div class="tblwrap"><table><thead><tr><th style="text-align:left">方法</th><th class="num">同 group 进过训练<br>（58 题）</th><th class="num">同 group 未进训练<br>（59 题）</th></tr></thead><tbody>
+<tr><td>天玑，带探针</td><td class="num">0.101</td><td class="num">0.077</td></tr>
+<tr><td>Jev 零样本，带探针</td><td class="num">0.140</td><td class="num">0.146</td></tr>
+<tr><td>GBDT，带探针</td><td class="num">0.117</td><td class="num">0.092</td></tr>
+<tr><td>LR，带探针</td><td class="num">0.161</td><td class="num">0.126</td></tr>
+<tr><td>基率</td><td class="num">0.278</td><td class="num">0.320</td></tr>
+</tbody></table></div>
+<figure><div><svg viewBox="0 0 680 280" xmlns="http://www.w3.org/2000/svg" role="img">
+<line x1="52" y1="222.0" x2="668" y2="222.0" stroke="var(--grid)"/>
+<text x="46" y="226.0" text-anchor="end" font-size="10.5" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">0.00</text>
+<line x1="52" y1="174.0" x2="668" y2="174.0" stroke="var(--grid)"/>
+<text x="46" y="178.0" text-anchor="end" font-size="10.5" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">0.06</text>
+<line x1="52" y1="126.0" x2="668" y2="126.0" stroke="var(--grid)"/>
+<text x="46" y="130.0" text-anchor="end" font-size="10.5" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">0.11</text>
+<line x1="52" y1="78.0" x2="668" y2="78.0" stroke="var(--grid)"/>
+<text x="46" y="82.0" text-anchor="end" font-size="10.5" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">0.17</text>
+<line x1="52" y1="30.0" x2="668" y2="30.0" stroke="var(--grid)"/>
+<text x="46" y="34.0" text-anchor="end" font-size="10.5" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">0.22</text>
+<rect x="101.0" y="99.1" width="26.0" height="122.9" rx="2" fill="var(--c-base)"/>
+<rect x="129.0" y="145.5" width="26.0" height="76.5" rx="2" fill="var(--blue)"/>
+<text x="129.0" y="239.0" text-anchor="middle" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">天玑</text>
+<rect x="255.0" y="58.9" width="26.0" height="163.1" rx="2" fill="var(--c-base)"/>
+<rect x="283.0" y="98.5" width="26.0" height="123.5" rx="2" fill="var(--blue)"/>
+<text x="283.0" y="239.0" text-anchor="middle" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">Jev 零样本</text>
+<rect x="409.0" y="107.4" width="26.0" height="114.6" rx="2" fill="var(--c-base)"/>
+<rect x="437.0" y="131.7" width="26.0" height="90.3" rx="2" fill="var(--blue)"/>
+<text x="437.0" y="239.0" text-anchor="middle" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">GBDT</text>
+<rect x="563.0" y="55.0" width="26.0" height="167.0" rx="2" fill="var(--c-base)"/>
+<rect x="591.0" y="98.3" width="26.0" height="123.7" rx="2" fill="var(--blue)"/>
+<text x="591.0" y="239.0" text-anchor="middle" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">LR</text>
+<rect x="52" y="6" width="12" height="12" rx="2" fill="var(--c-base)"/>
+<text x="69" y="16" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">不带探针</text>
+<rect x="134" y="6" width="12" height="12" rx="2" fill="var(--blue)"/>
+<text x="151" y="16" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">带探针</text>
+<text x="668" y="16" text-anchor="end" font-size="11.5" fill="var(--ink2)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">Brier，越低越好</text>
+</svg></div>
+<figcaption><b>图 5</b> 考卷上各方法不带探针（灰）与带探针（蓝）的收敛 Brier 分数。四种方法加上探针后都明显下降，信息主要来自摸矩阵这一步。</figcaption></figure>
+<div class="tbl-cap"><b>表 3</b> 探针消融。天玑是同一个模型，训练时四分之一的样本去掉了探针段。合成测试集上数字特征已经够用，探针对 GBDT 反而有害。</div>
+<div class="tblwrap"><table><thead><tr><th style="text-align:left">方法</th><th class="num">SuiteSparse 考卷<br>不带 → 带探针</th><th class="num">真实测试（其他 group）<br>不带 → 带探针</th><th class="num">合成测试<br>不带 → 带探针</th></tr></thead><tbody>
+<tr><td>天玑</td><td class="num">0.142 → 0.089</td><td class="num">0.133 → 0.105</td><td class="num">0.080 → 0.064</td></tr>
+<tr><td>Jev 零样本</td><td class="num">0.189 → 0.143</td><td class="num">0.148 → 0.135</td><td class="num">0.236 → 0.209</td></tr>
+<tr><td>GBDT</td><td class="num">0.133 → 0.104</td><td class="num">0.097 → 0.094</td><td class="num">0.062 → 0.080</td></tr>
+<tr><td>LR</td><td class="num">0.193 → 0.143</td><td class="num">0.142 → 0.106</td><td class="num">0.156 → 0.121</td></tr>
+</tbody></table></div>
+<figure><div><svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg" role="img">
+<line x1="52" y1="242.0" x2="708" y2="242.0" stroke="var(--grid)"/>
+<text x="46" y="246.0" text-anchor="end" font-size="10.5" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">0.00</text>
+<line x1="52" y1="189.0" x2="708" y2="189.0" stroke="var(--grid)"/>
+<text x="46" y="193.0" text-anchor="end" font-size="10.5" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">0.21</text>
+<line x1="52" y1="136.0" x2="708" y2="136.0" stroke="var(--grid)"/>
+<text x="46" y="140.0" text-anchor="end" font-size="10.5" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">0.43</text>
+<line x1="52" y1="83.0" x2="708" y2="83.0" stroke="var(--grid)"/>
+<text x="46" y="87.0" text-anchor="end" font-size="10.5" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">0.64</text>
+<line x1="52" y1="30.0" x2="708" y2="30.0" stroke="var(--grid)"/>
+<text x="46" y="34.0" text-anchor="end" font-size="10.5" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">0.86</text>
+<rect x="75.6" y="235.2" width="26.0" height="6.8" rx="2" fill="var(--c-phecda)"/>
+<rect x="103.6" y="232.0" width="26.0" height="10.0" rx="2" fill="var(--c-jev)"/>
+<rect x="131.6" y="213.1" width="26.0" height="28.9" rx="2" fill="var(--c-base)"/>
+<text x="117.6" y="259.0" text-anchor="middle" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">Jacobi-CG</text>
+<text x="117.6" y="274.0" text-anchor="middle" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">100 步内</text>
+<rect x="206.8" y="160.7" width="26.0" height="81.3" rx="2" fill="var(--c-phecda)"/>
+<rect x="234.8" y="223.4" width="26.0" height="18.6" rx="2" fill="var(--c-jev)"/>
+<rect x="262.8" y="228.7" width="26.0" height="13.3" rx="2" fill="var(--c-base)"/>
+<text x="248.8" y="259.0" text-anchor="middle" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">直接法</text>
+<text x="248.8" y="274.0" text-anchor="middle" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">内存超限</text>
+<rect x="338.0" y="130.6" width="26.0" height="111.4" rx="2" fill="var(--c-phecda)"/>
+<rect x="366.0" y="97.4" width="26.0" height="144.6" rx="2" fill="var(--c-jev)"/>
+<rect x="394.0" y="57.7" width="26.0" height="184.3" rx="2" fill="var(--c-base)"/>
+<text x="380.0" y="259.0" text-anchor="middle" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">AMG 与直接法</text>
+<text x="380.0" y="274.0" text-anchor="middle" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">谁先成功</text>
+<rect x="469.2" y="230.4" width="26.0" height="11.6" rx="2" fill="var(--c-phecda)"/>
+<rect x="497.2" y="223.1" width="26.0" height="18.9" rx="2" fill="var(--c-jev)"/>
+<rect x="525.2" y="178.7" width="26.0" height="63.3" rx="2" fill="var(--c-base)"/>
+<text x="511.2" y="259.0" text-anchor="middle" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">BiCGSTAB</text>
+<text x="511.2" y="274.0" text-anchor="middle" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">能否收敛</text>
+<rect x="600.4" y="229.9" width="26.0" height="12.1" rx="2" fill="var(--c-phecda)"/>
+<rect x="628.4" y="221.8" width="26.0" height="20.2" rx="2" fill="var(--c-jev)"/>
+<rect x="656.4" y="143.0" width="26.0" height="99.0" rx="2" fill="var(--c-base)"/>
+<text x="642.4" y="259.0" text-anchor="middle" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">AMG-GMRES</text>
+<text x="642.4" y="274.0" text-anchor="middle" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">能否收敛</text>
+<rect x="52" y="6" width="12" height="12" rx="2" fill="var(--c-phecda)"/>
+<text x="69" y="16" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">天玑</text>
+<rect x="108" y="6" width="12" height="12" rx="2" fill="var(--c-jev)"/>
+<text x="125" y="16" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">Jev 零样本</text>
+<rect x="229" y="6" width="12" height="12" rx="2" fill="var(--c-base)"/>
+<text x="246" y="16" font-size="12" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">基率</text>
+<text x="708" y="16" text-anchor="end" font-size="11.5" fill="var(--ink2)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">Brier，越低越好</text>
+</svg></div>
+<figcaption><b>图 6</b> 真实矩阵（考卷与其他 group，共 185 题）上，训练时没见过的三个问题与两个求解器配置的 Brier 分数。GBDT 与 LR 没有这些问题的训练标签，无法作答。</figcaption></figure>
+<div class="tbl-cap"><b>表 4</b> 泛化测试的 Brier 分数。格式变化只在真实矩阵上测，只算五个“能否收敛”问题。每栏最好者加粗。</div>
+<div class="tblwrap"><table><thead><tr><th style="text-align:left" rowspan="2">测试项</th><th colspan="3" style="text-align:center">真实矩阵（185 题）</th><th colspan="3" style="text-align:center">合成测试（274 题）</th><th style="text-align:left" rowspan="2">GBDT 与 LR</th></tr><tr><th class="num">天玑</th><th class="num">Jev</th><th class="num">基率</th><th class="num">天玑</th><th class="num">Jev</th><th class="num">基率</th></tr></thead><tbody>
+<tr><td>Jacobi-CG100 步内</td><td class="num"><b>0.028</b></td><td class="num">0.041</td><td class="num">0.117</td><td class="num">0.153</td><td class="num"><b>0.052</b></td><td class="num">0.103</td><td style="color:var(--ink2);font-size:13px">无法作答：没有训练标签</td></tr>
+<tr><td>直接法内存超限</td><td class="num">0.330</td><td class="num">0.075</td><td class="num"><b>0.054</b></td><td class="num">0.121</td><td class="num">0.025</td><td class="num"><b>0.000</b></td><td style="color:var(--ink2);font-size:13px">无法作答：没有训练标签</td></tr>
+<tr><td>AMG 与直接法谁先成功</td><td class="num"><b>0.452</b></td><td class="num">0.586</td><td class="num">0.747</td><td class="num"><b>0.419</b></td><td class="num">0.502</td><td class="num">0.575</td><td style="color:var(--ink2);font-size:13px">无法作答：没有训练标签</td></tr>
+<tr><td>BiCGSTAB能否收敛</td><td class="num"><b>0.047</b></td><td class="num">0.077</td><td class="num">0.256</td><td class="num"><b>0.096</b></td><td class="num">0.254</td><td class="num">0.249</td><td style="color:var(--ink2);font-size:13px">无法作答：没有训练标签</td></tr>
+<tr><td>AMG-GMRES能否收敛</td><td class="num"><b>0.049</b></td><td class="num">0.082</td><td class="num">0.401</td><td class="num">0.160</td><td class="num"><b>0.113</b></td><td class="num">0.218</td><td style="color:var(--ink2);font-size:13px">无法作答：没有训练标签</td></tr>
+<tr><td>格式变化：一半矩阵字段缺失</td><td class="num"><b>0.162</b></td><td class="num">0.178</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td style="color:var(--ink2);font-size:13px">缺失特征当缺失值：0.279</td></tr>
+<tr><td>格式变化：字段顺序打乱</td><td class="num"><b>0.094</b></td><td class="num">0.142</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td style="color:var(--ink2);font-size:13px">按字段名解析，不受影响：0.086</td></tr>
+<tr><td>格式变化：只有文字描述</td><td class="num">0.266</td><td class="num"><b>0.230</b></td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td style="color:var(--ink2);font-size:13px">无法作答：没有数值特征</td></tr>
+</tbody></table></div>
+<figure><div><svg viewBox="0 0 640 368" xmlns="http://www.w3.org/2000/svg" role="img">
+<text x="180" y="23.0" text-anchor="end" font-size="13" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">事后最优</text>
+<rect x="190" y="8" width="49.6" height="22" rx="3" fill="var(--ink)"/>
+<text x="245.6" y="23.0" font-size="12" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">340 s</text>
+<text x="180" y="55.0" text-anchor="end" font-size="13" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">天玑，不带探针</text>
+<rect x="190" y="40" width="65.4" height="22" rx="3" fill="var(--c-phecda)"/>
+<text x="261.4" y="55.0" font-size="12" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">447 s</text>
+<text x="180" y="87.0" text-anchor="end" font-size="13" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif" font-weight="bold">天玑，带探针</text>
+<rect x="190" y="72" width="123.0" height="22" rx="3" fill="var(--c-phecda)"/>
+<text x="319.0" y="87.0" font-size="12" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">841 s</text>
+<text x="180" y="119.0" text-anchor="end" font-size="13" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">天玑，带探针，复用层级</text>
+<rect x="190" y="104" width="121.7" height="22" rx="3" fill="var(--c-phecda)"/>
+<text x="317.7" y="119.0" font-size="12" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">832 s</text>
+<text x="180" y="151.0" text-anchor="end" font-size="13" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">Jev，带探针</text>
+<rect x="190" y="136" width="136.0" height="22" rx="3" fill="var(--c-jev)"/>
+<text x="332.0" y="151.0" font-size="12" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">930 s</text>
+<text x="180" y="183.0" text-anchor="end" font-size="13" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">Jev，不带探针</text>
+<rect x="190" y="168" width="76.6" height="22" rx="3" fill="var(--c-jev)"/>
+<text x="272.6" y="183.0" font-size="12" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">524 s</text>
+<text x="180" y="215.0" text-anchor="end" font-size="13" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">GBDT，带探针</text>
+<rect x="190" y="200" width="140.9" height="22" rx="3" fill="var(--c-gbdt)"/>
+<text x="336.9" y="215.0" font-size="12" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">964 s</text>
+<text x="180" y="247.0" text-anchor="end" font-size="13" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">GBDT，不带探针</text>
+<rect x="190" y="232" width="105.5" height="22" rx="3" fill="var(--c-gbdt)"/>
+<text x="301.5" y="247.0" font-size="12" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">722 s</text>
+<text x="180" y="279.0" text-anchor="end" font-size="13" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">LR，带探针</text>
+<rect x="190" y="264" width="196.7" height="22" rx="3" fill="var(--c-lr)"/>
+<text x="392.7" y="279.0" font-size="12" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">1,346 s</text>
+<text x="180" y="311.0" text-anchor="end" font-size="13" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">LR，不带探针</text>
+<rect x="190" y="296" width="67.9" height="22" rx="3" fill="var(--c-lr)"/>
+<text x="263.9" y="311.0" font-size="12" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">464 s</text>
+<text x="180" y="343.0" text-anchor="end" font-size="13" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">固定顺序</text>
+<rect x="190" y="328" width="330.4" height="22" rx="3" fill="var(--c-base)"/>
+<text x="526.4" y="343.0" font-size="12" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">2,260 s</text>
+</svg></div>
+<figcaption><b>图 7a</b> 其他 group 的 46 道可解真实矩阵上，按各方法的顺序依次真跑的总墙钟时间。“复用层级”表示探针建好的多重网格层级在随后的 AMG-CG 求解中不再重建。</figcaption></figure>
+<figure><div><svg viewBox="0 0 640 368" xmlns="http://www.w3.org/2000/svg" role="img">
+<text x="180" y="23.0" text-anchor="end" font-size="13" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">事后最优</text>
+<rect x="190" y="8" width="81.4" height="22" rx="3" fill="var(--ink)"/>
+<text x="277.4" y="23.0" font-size="12" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">943 s</text>
+<text x="180" y="55.0" text-anchor="end" font-size="13" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">天玑，不带探针</text>
+<rect x="190" y="40" width="313.6" height="22" rx="3" fill="var(--c-phecda)"/>
+<text x="509.6" y="55.0" font-size="12" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">3,633 s</text>
+<text x="180" y="87.0" text-anchor="end" font-size="13" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif" font-weight="bold">天玑，带探针</text>
+<rect x="190" y="72" width="309.0" height="22" rx="3" fill="var(--c-phecda)"/>
+<text x="505.0" y="87.0" font-size="12" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">3,579 s</text>
+<text x="180" y="119.0" text-anchor="end" font-size="13" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">天玑，带探针，复用层级</text>
+<rect x="190" y="104" width="303.9" height="22" rx="3" fill="var(--c-phecda)"/>
+<text x="499.9" y="119.0" font-size="12" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">3,521 s</text>
+<text x="180" y="151.0" text-anchor="end" font-size="13" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">Jev，带探针</text>
+<rect x="190" y="136" width="326.8" height="22" rx="3" fill="var(--c-jev)"/>
+<text x="522.8" y="151.0" font-size="12" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">3,785 s</text>
+<text x="180" y="183.0" text-anchor="end" font-size="13" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">Jev，不带探针</text>
+<rect x="190" y="168" width="183.6" height="22" rx="3" fill="var(--c-jev)"/>
+<text x="379.6" y="183.0" font-size="12" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">2,127 s</text>
+<text x="180" y="215.0" text-anchor="end" font-size="13" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">GBDT，带探针</text>
+<rect x="190" y="200" width="259.5" height="22" rx="3" fill="var(--c-gbdt)"/>
+<text x="455.5" y="215.0" font-size="12" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">3,006 s</text>
+<text x="180" y="247.0" text-anchor="end" font-size="13" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">GBDT，不带探针</text>
+<rect x="190" y="232" width="186.4" height="22" rx="3" fill="var(--c-gbdt)"/>
+<text x="382.4" y="247.0" font-size="12" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">2,159 s</text>
+<text x="180" y="279.0" text-anchor="end" font-size="13" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">LR，带探针</text>
+<rect x="190" y="264" width="330.4" height="22" rx="3" fill="var(--c-lr)"/>
+<text x="526.4" y="279.0" font-size="12" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">3,827 s</text>
+<text x="180" y="311.0" text-anchor="end" font-size="13" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">LR，不带探针</text>
+<rect x="190" y="296" width="132.5" height="22" rx="3" fill="var(--c-lr)"/>
+<text x="328.5" y="311.0" font-size="12" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">1,535 s</text>
+<text x="180" y="343.0" text-anchor="end" font-size="13" fill="var(--ink)" font-family="Georgia, Noto Serif SC, Songti SC, SimSun, serif">固定顺序</text>
+<rect x="190" y="328" width="246.8" height="22" rx="3" fill="var(--c-base)"/>
+<text x="442.8" y="343.0" font-size="12" fill="var(--ink2)" font-family="Consolas, SFMono-Regular, monospace">2,858 s</text>
+</svg></div>
+<figcaption><b>图 7b</b> SuiteSparse 考卷 63 道可解题上的同一统计。带探针的方法都没有快过不带探针的 LR。</figcaption></figure>
+<div class="tbl-cap"><b>表 5</b> 路由模拟：可解题上的总墙钟时间（秒）。</div>
+<div class="tblwrap"><table><thead><tr><th style="text-align:left">策略</th><th class="num">SuiteSparse 考卷</th><th class="num">真实测试（其他 group）</th><th class="num">合成测试</th></tr></thead><tbody>
+<tr><td>事后最优</td><td class="num">943</td><td class="num">340</td><td class="num">1,955</td></tr>
+<tr><td>天玑，带探针</td><td class="num">3,579</td><td class="num">841</td><td class="num">5,352</td></tr>
+<tr><td>天玑，带探针，复用 AMG 层级</td><td class="num">3,521</td><td class="num">832</td><td class="num">5,277</td></tr>
+<tr><td>天玑，不带探针</td><td class="num">3,633</td><td class="num">447</td><td class="num">4,099</td></tr>
+<tr><td>Jev，带探针</td><td class="num">3,785</td><td class="num">930</td><td class="num">9,734</td></tr>
+<tr><td>Jev，不带探针</td><td class="num">2,127</td><td class="num">524</td><td class="num">5,959</td></tr>
+<tr><td>GBDT，带探针</td><td class="num">3,006</td><td class="num">964</td><td class="num">5,450</td></tr>
+<tr><td>GBDT，不带探针</td><td class="num">2,159</td><td class="num">722</td><td class="num">3,613</td></tr>
+<tr><td>LR，带探针</td><td class="num">3,827</td><td class="num">1,346</td><td class="num">7,263</td></tr>
+<tr><td>LR，不带探针</td><td class="num">1,535</td><td class="num">464</td><td class="num">3,920</td></tr>
+<tr><td>固定顺序</td><td class="num">2,858</td><td class="num">2,260</td><td class="num">5,256</td></tr>
+<tr><td>按基率排序</td><td class="num">3,219</td><td class="num">1,189</td><td class="num">6,585</td></tr>
+<tr><td style="color:var(--ink2)">其中探针耗时</td><td class="num">1,177</td><td class="num">370</td><td class="num">1,683</td></tr>
+<tr><td style="color:var(--ink2)">可解题数</td><td class="num">63</td><td class="num">46</td><td class="num">263</td></tr>
+</tbody></table></div>
+
+
+<h3>方法细节</h3>
+<p><strong>状态与问题。</strong>状态由三部分组成：代码从矩阵算出的数字特征，探针读数，以及一段自然语言描述。数字都附一句文字分档，例如“几乎没有行对角占优”。问题分三种：是非题（noul）问一个条件是否成立，选择题（choice）从若干选项中选一个，分档题（score）从有序档位中选一个。例如“AMG-CG 能否在预算内收敛”是是非题，“哪个配置最先成功”是选择题。</p>
+<p><strong>预算与菜单。</strong>所有配置共用一个预算：真实相对残差降到 10<sup>−8</sup>，迭代不超过 500 步，单核墙钟不超过 120 秒，额外内存不超过 6GB。菜单有五个配置：Jacobi-CG；光滑聚集 AMG<sup><a href="#refs">[11]</a><a href="#refs">[12]</a></sup>预条件的 CG（AMG-CG），近零空间只用常向量；同一 AMG 加上由矩阵自身算出的低能向量（AMG+近零空间-CG）；ILU 预条件的 GMRES<sup><a href="#refs">[14]</a></sup>；SuperLU 直接法<sup><a href="#refs">[13]</a></sup>。</p>
+<p><strong>探针。</strong>Jacobi 试跑做 20 步 Jacobi 预条件的共轭梯度（矩阵不像对称正定时改用 GMRES），记录每步残差的平均缩小倍数，并由共轭梯度的系数组出 Lanczos 三对角阵，估计缩放后矩阵的最大、最小特征值和条件数，出现非正特征值时报告矩阵不定。多重网格试跑建立与 AMG-CG 相同的层级，跑 15 步，记录建层级耗时、层数、残差缩小倍数，以及光滑后的误差落在粗网格空间里的比例；这个比例低，说明近零空间假设不成立，这正是结构力学矩阵上多重网格失败的常见原因。慢模态检查对随机误差做 10 次阻尼 Jacobi 光滑，统计存活比例，以及存活误差中能被常向量或富化近零空间解释的部分。探针的中位耗时在合成测试集上为 0.7 秒，在其他 group 的真实矩阵上为 2.8 秒，在考卷上为 24 秒。</p>
+<p><strong>模型与训练。</strong>结构沿用 Open-Jev-9B：底座 Qwen3.5-9B，加秩为 8 的 LoRA<sup><a href="#refs">[7]</a></sup>和一个标量打分头。每个候选答案单独做一次前向，打分头从 Yes 与 No 两个词元的读出初始化；是非题取 sigmoid，选择题和分档题在候选之间取 softmax。损失为交叉熵加 0.1 倍 Brier 分数，两者都是严格适当评分规则<sup><a href="#refs">[9]</a></sup>，模型只有如实报告概率，期望损失才最小。训练分两段：先只用合成题，再把真实矩阵（重复三次以提高权重）加进来继续训练，第二段共 2,848 条样本、662 步，用两张 RTX 5090 约 55 分钟。四分之一的样本去掉探针段，让同一个模型既能读带探针的状态，也能读不带探针的状态。温度在真实矩阵校准集上按题型拟合。</p>
+<p><strong>期望代价。</strong>第一个配置 <i>c</i> 的期望代价为 <i>p<sub>c</sub></i> <i>t</i><sub>ok</sub>(<i>c</i>) + (1 − <i>p<sub>c</sub></i>)(<i>t</i><sub>fail</sub>(<i>c</i>) + <i>E</i><sub>rest</sub>)，其中 <i>p<sub>c</sub></i> 是天玑给的成功概率，<i>t</i><sub>ok</sub> 与 <i>t</i><sub>fail</sub> 是训练集上按矩阵规模回归得到的典型成功与失败耗时，<i>E</i><sub>rest</sub> 是剩余配置的最优期望代价。</p>
+<p><strong>数据划分。</strong>真实矩阵按 SuiteSparse 的 group 划分。考卷所在的 36 个 group 之外的矩阵全部可用。由于考卷所在的 group 几乎囊括了库里的对称正定结构矩阵，我们放宽规则，也允许考卷同 group、但不属于考卷的矩阵进入训练，只排除名字去掉末尾数字后与考卷同族的矩阵；考卷成绩因此按 group 是否进过训练分开报告（表 2）。其余真实矩阵按 group 划出训练集（324 个）、校准集（35 个）和测试集（68 个），校准集只用于温度缩放。合成题中有 103 道超过 20 万未知数。</p>
+
+</div>
+</details>
+<p class="aside-note">天玑与 TypeSafe 公司及其 Jev 模型没有任何关联。文中 Jev 的数字全部来自我们用公开 API 对同一批状态和问题的实测，版本 jev-1.13.0，未做任何调参或校准；页面没有使用 TypeSafe 的标识和品牌样式。</p>
+<h2 id="refs">参考文献</h2>
+<ol class="refs">
+<li>TypeSafe. System One models and the Jev API documentation. <a href="https://docs.typesafe.ai">docs.typesafe.ai</a></li>
+<li>Z. Cai. Open-Jev-9B: LoRA adapter and decision head for Qwen3.5-9B. 2026. <a href="https://huggingface.co/ZefanCai/Open-Jev-9B">huggingface.co/ZefanCai/Open-Jev-9B</a></li>
+<li>Open-Jev: open Qwen-based non-generative probability decisions. <a href="https://github.com/Zefan-Cai/Open-Jev">github.com/Zefan-Cai/Open-Jev</a></li>
+<li>J. R. Rice. The algorithm selection problem. <i>Advances in Computers</i>, 15 (1976) 65–118. <a href="https://doi.org/10.1016/S0065-2458(08)60520-3">doi:10.1016/S0065-2458(08)60520-3</a></li>
+<li>T. A. Davis and Y. Hu. The University of Florida sparse matrix collection. <i>ACM TOMS</i>, 2011. <a href="https://sparse.tamu.edu">sparse.tamu.edu</a></li>
+<li>Qwen Team. Qwen3.5-9B. <a href="https://huggingface.co/Qwen/Qwen3.5-9B">huggingface.co/Qwen/Qwen3.5-9B</a></li>
+<li>E. J. Hu et al. LoRA: Low-rank adaptation of large language models. <i>ICLR</i>, 2022. <a href="https://arxiv.org/abs/2106.09685">arXiv:2106.09685</a></li>
+<li>G. W. Brier. Verification of forecasts expressed in terms of probability. <i>Monthly Weather Review</i>, 78 (1950) 1–3.</li>
+<li>T. Gneiting and A. E. Raftery. Strictly proper scoring rules, prediction, and estimation. <i>J. Amer. Statist. Assoc.</i>, 102 (2007) 359–378. <a href="https://doi.org/10.1198/016214506000001437">doi:10.1198/016214506000001437</a></li>
+<li>C. Guo, G. Pleiss, Y. Sun, K. Q. Weinberger. On calibration of modern neural networks. <i>ICML</i>, 2017. <a href="https://arxiv.org/abs/1706.04599">arXiv:1706.04599</a></li>
+<li>N. Bell et al. PyAMG: Algebraic multigrid solvers in Python. <i>J. Open Source Software</i>, 2023. <a href="https://github.com/pyamg/pyamg">github.com/pyamg/pyamg</a></li>
+<li>P. Vaněk, J. Mandel, M. Brezina. Algebraic multigrid by smoothed aggregation for second and fourth order elliptic problems. <i>Computing</i>, 56 (1996) 179–196. <a href="https://doi.org/10.1007/BF02238511">doi:10.1007/BF02238511</a></li>
+<li>X. S. Li. An overview of SuperLU: algorithms, implementation, and user interface. <i>ACM TOMS</i>, 31 (2005) 302–325. <a href="https://doi.org/10.1145/1089014.1089017">doi:10.1145/1089014.1089017</a></li>
+<li>Y. Saad. <i>Iterative Methods for Sparse Linear Systems</i>. 2nd ed., SIAM, 2003. <a href="https://epubs.siam.org/doi/book/10.1137/1.9780898718003">doi:10.1137/1.9780898718003</a></li>
+<li>T. Chen et al. OmniArch: Building foundation model for scientific computing. <i>ICML</i>, 2025. <a href="https://arxiv.org/abs/2402.16014">arXiv:2402.16014</a></li>
+<li>北航 SCAL 小组. 智算玉衡 Alioth：让 AI 生成方程求解器. 2026. <a href="alioth.html">tianyuc.com/blog/alioth.html</a></li>
+<li>H. C. Elman, D. J. Silvester, A. J. Wathen. <i>Finite Elements and Fast Iterative Solvers: with Applications in Incompressible Fluid Dynamics</i>. 2nd ed., Oxford University Press, 2014. <a href="https://global.oup.com/academic/product/finite-elements-and-fast-iterative-solvers-9780199678808">oup.com</a></li>
+</ol>
+<div class="sign">北航 SCAL 小组<br>2026 年 9 月</div>
+</article>
+
+<script>
+(function () {
+  // hero: 题目粒子从左侧进来, 在分岔口按概率挑一条求解器通道; 走到头成功变金色, 失败的折回改走下一条
+  const cv = document.getElementById("sim");
+  const ctx = cv.getContext("2d");
+  const LANES = 5;
+  let W = 0, H = 0, parts = [];
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  function laneY(k) { return H * (0.22 + 0.56 * k / (LANES - 1)); }
+  function spawn() {
+    const probs = Array.from({ length: LANES }, () => Math.random());
+    const s = probs.reduce((a, b) => a + b, 0);
+    let r = Math.random() * s, k = 0;
+    while (k < LANES - 1 && r > probs[k]) { r -= probs[k]; k++; }
+    return { x: -10, y: H * rnd(0.42, 0.58), lane: k, ok: Math.random() < 0.72, t: 0, v: rnd(0.9, 1.5), tries: 0, dead: false };
+  }
+  function fit() { W = cv.width = cv.clientWidth; H = cv.height = cv.clientHeight; }
+  window.addEventListener("resize", fit);
+  fit();
+  for (let i = 0; i < 60; i++) { const p = spawn(); p.x = rnd(-10, W); parts.push(p); }
+  function step() {
+    if (parts.length < 90 && Math.random() < 0.5) parts.push(spawn());
+    const fork = W * 0.3, end = W * 0.9;
+    for (const p of parts) {
+      p.x += p.v * (W / 900) * 1.6;
+      const ty = p.x < fork ? H * 0.5 + (p.y - H * 0.5) * 0.98 : laneY(p.lane);
+      p.y += (ty - p.y) * (p.x < fork ? 0.02 : 0.06);
+      if (p.x > end) {
+        if (p.ok || p.tries > 1) { p.dead = true; }
+        else { p.tries++; p.x = fork + rnd(0, 20); p.lane = (p.lane + 1 + Math.floor(Math.random() * 3)) % LANES; p.ok = Math.random() < 0.6; p.back = 26; }
+      }
+      if (p.back) p.back--;
+    }
+    parts = parts.filter((p) => !p.dead);
+  }
+  function render() {
+    ctx.fillStyle = "rgba(15,38,71,0.28)";
+    ctx.fillRect(0, 0, W, H);
+    const fork = W * 0.3, end = W * 0.9;
+    ctx.lineWidth = 1;
+    for (let k = 0; k < LANES; k++) {
+      ctx.strokeStyle = "rgba(143,184,240,0.10)";
+      ctx.beginPath(); ctx.moveTo(fork, laneY(k)); ctx.lineTo(end, laneY(k)); ctx.stroke();
+    }
+    for (const p of parts) {
+      const near = p.x > end * 0.93;
+      let c = "rgba(143,184,240,0.85)";
+      if (near && p.ok) c = "rgba(242,201,76,0.95)";
+      else if (near && !p.ok) c = "rgba(238,109,92,0.9)";
+      if (p.back) c = "rgba(238,109,92," + (0.3 + p.back / 40) + ")";
+      ctx.fillStyle = c;
+      ctx.beginPath(); ctx.arc(p.x, p.y, near ? 2.4 : 1.7, 0, 6.2832); ctx.fill();
+    }
+  }
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    for (let i = 0; i < 500; i++) step();
+    ctx.fillStyle = "#0F2647"; ctx.fillRect(0, 0, W, H);
+    for (let i = 0; i < 6; i++) render();
+  } else {
+    ctx.fillStyle = "#0F2647"; ctx.fillRect(0, 0, W, H);
+    (function loop() { step(); render(); requestAnimationFrame(loop); })();
+  }
+})();
+</script>
+</body>
+</html>

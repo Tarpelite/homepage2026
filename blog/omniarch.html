@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智算天璇（OmniArch）：科学智算基础模型</title>
+<meta name="description" content="OmniArch: Building Foundation Model for Scientific Computing (ICML 2025). 本文首发于微信公众号“北航软件人”。">
+<style>
+:root {
+  --ink: #1C2733; --ink2: #5A6B7E; --line: #E3E9F2;
+  --blue: #2456C4; --verm: #B23A2E; --bg: #FFFFFF; --soft: #F6F8FB;
+  --serif: Georgia, "Noto Serif SC", "Songti SC", "SimSun", serif;
+  --mono: "Consolas", "SFMono-Regular", monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--serif);
+       font-size: 16.5px; line-height: 1.9; }
+.hero { position: relative; min-height: 400px; background: #0F2647;
+        display: flex; align-items: center; justify-content: center; overflow: hidden; }
+#sim { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.85; }
+.hero-inner { position: relative; z-index: 2; text-align: center; padding: 70px 24px;
+              color: #F0F5FC; }
+.hero-badge { display: inline-block; font-family: var(--mono); font-size: 12px;
+              letter-spacing: 3px; border: 1px solid rgba(240,245,252,0.55);
+              border-radius: 999px; padding: 4px 16px; margin-bottom: 22px; }
+.hero h1 { font-size: 38px; letter-spacing: 3px; font-weight: normal;
+           text-shadow: 0 2px 18px rgba(6,20,44,0.6); }
+.hero .sub { margin-top: 14px; font-size: 17px; opacity: 0.92; }
+.hero .byline { margin-top: 26px; font-size: 13.5px; font-family: var(--mono);
+                letter-spacing: 1px; opacity: 0.8; }
+article { max-width: 740px; margin: 0 auto; padding: 46px 22px 80px; }
+article p, article li { text-align: justify; text-justify: inter-ideograph; }
+blockquote { border-left: 3px solid var(--blue); background: var(--soft);
+             padding: 14px 22px; margin: 30px 0; color: var(--ink2); font-size: 15.5px; }
+blockquote .by { text-align: right; }
+h2 { font-size: 22.5px; letter-spacing: 1.5px; font-weight: normal; line-height: 1.6;
+     margin: 46px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+h3 { font-size: 18.5px; font-weight: bold; letter-spacing: 0.5px; margin: 34px 0 10px; }
+h3::before { content: ""; display: inline-block; width: 4px; height: 17px; background: var(--blue);
+             border-radius: 2px; margin-right: 10px; vertical-align: -2px; }
+p { margin: 15px 0; }
+strong { color: var(--ink); }
+a { color: var(--blue); }
+figure { margin: 26px 0; text-align: center; }
+figure img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+figure.cover img { width: 300px; border: none; }
+figure.narrow img { width: 560px; }
+figure.formula img { width: 300px; border: none; }
+figure.portrait img { width: 160px; border-radius: 8px; }
+figcaption { font-size: 13.5px; color: var(--ink2); margin-top: 10px; text-align: left;
+             line-height: 1.7; }
+.links { background: var(--soft); border: 1px solid var(--line); border-radius: 8px;
+         padding: 14px 20px; font-size: 15px; margin: 20px 0; }
+.links a { word-break: break-all; }
+.rh { font-size: 19px; margin: 44px 0 14px; font-weight: bold; letter-spacing: 0.5px; }
+.rh .no { display: inline-block; width: 26px; height: 26px; line-height: 26px;
+          text-align: center; background: var(--verm); color: #fff; border-radius: 50%;
+          font-family: var(--mono); font-size: 14px; margin-right: 10px; vertical-align: 2px; }
+.rh .hl { background: linear-gradient(transparent 62%, rgba(36,86,196,0.16) 62%); padding: 0 2px; }
+.src-note { font-size: 14px; color: var(--ink2); border: 1px dashed var(--line); border-radius: 8px;
+            padding: 10px 16px; margin: 0 0 26px; line-height: 1.8; }
+.src-note a { white-space: nowrap; margin-left: 4px; }
+.src-note.foot { margin: 36px 0 0; }
+.orig-title { font-size: 21px; line-height: 1.6; letter-spacing: 0.5px; margin: 0 0 8px; }
+.ask { text-align: center; color: var(--verm); font-size: 17.5px; margin: 26px 0; }
+.ask strong { color: var(--verm); font-weight: normal; }
+.end { text-align: center; color: var(--ink2); font-size: 14px; line-height: 1.9; margin-top: 46px;
+       padding-top: 20px; border-top: 1px solid var(--line); }
+.end-mark { font-family: var(--mono); letter-spacing: 4px; color: var(--ink); margin-bottom: 10px; }
+.end img { width: 120px; height: auto; display: block; margin: 0 auto 10px; }
+@media (max-width: 700px) {
+  .hero h1 { font-size: 27px; }
+  article { font-size: 15.5px; }
+  .rh { font-size: 17px; }
+  .orig-title { font-size: 18.5px; }
+  h2 { font-size: 20px; }
+  figure.cover img { width: 220px; }
+}
+  .ed-note{font-size:.82em;color:var(--ink2);}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <canvas id="sim" aria-hidden="true"></canvas>
+  <div class="hero-inner">
+    <div class="hero-badge">ICML 2025</div>
+    <h1>智算天璇 OmniArch</h1>
+    <div class="sub">科学智算基础模型</div>
+    <div class="byline">北航 SCAL 小组   2025 年 8 月</div>
+  </div>
+</div>
+
+<article>
+<div class="src-note">本文首发于微信公众号“北航软件人”，2025 年 8 月 26 日。<a href="https://mp.weixin.qq.com/s/TSeV5uZMvdtr5q9i5UqZTQ" target="_blank" rel="noopener">阅读原文 ↗</a></div>
+<div class="orig-title">ICML 2025丨北航软件学院周号益团队发表科学智算基础模型“OmniArch”，实现1D-2D-3D偏微分方程统一求解</div>
+<figure class="cover">
+  <img src="omniarch_assets/cover.png" alt="OmniArch 头图" loading="lazy">
+</figure>
+<p>近日，我院周号益副教授团队在科学智算方向取得重要进展，提出科学智算基础模型OmniArch，首次以单一模型统一求解<strong>1D、2D、3D</strong>多维偏微分方程（PDE），在多项关键指标上显著优于现有方法。相关成果以<strong>“OmniArch: Building Foundation Model for Scientific Computing”</strong>为题在国际机器学习大会<strong> ICML 2025 </strong>发表。</p>
+<figure class="narrow">
+  <img src="omniarch_assets/paper_title.png" alt="论文标题：OmniArch: Building Foundation Model for Scientific Computing" loading="lazy">
+</figure>
+<div class="links">
+  <strong>论文地址：</strong><a href="https://openreview.net/pdf?id=UlprLwWYKP" target="_blank" rel="noopener">https://openreview.net/pdf?id=UlprLwWYKP</a><br>
+  <strong>代码地址：</strong><a href="https://openi.pcl.ac.cn/cty315/OmniArch" target="_blank" rel="noopener">https://openi.pcl.ac.cn/cty315/OmniArch</a><br>
+  <strong>CNAI4S科学智算共性平台：</strong><a href="https://cnai4s.com/" target="_blank" rel="noopener">https://cnai4s.com/</a>
+</div>
+<blockquote>
+  <div>“大自然的书籍是用数学语言写成的。”</div>
+  <div class="by">—— 伽利略</div>
+</blockquote>
+<p>而<strong>偏微分方程（PDE）</strong>，正是这本著作中最核心的篇章之一。它刻画了从量子涨落到星系演化，从流体冲击到电磁传播的<strong>普适物理规律</strong>。然而，求解PDE却如同破译大自然的密码，传统数值方法计算昂贵，专用神经网络模型则局限特定问题，一个模型通常只能求解一种维度、一类物理量、特定边界条件的方程。面对真实世界<strong>多尺度、多物理场强耦合</strong>的复杂系统，人们不得不为每个子问题“量身定制”求解器，知识无法迁移与复用，模型也难以通过数据和参数进行规模扩展。</p>
+<p class="ask"><strong>能否像ChatGPT理解语言一样，构建一个理解并求解“物理语言”的通用基础模型？</strong></p>
+<h2>挑战：阻碍“物理GPT”<br>-OmniArch的三座大山</h2>
+<figure>
+  <img src="omniarch_assets/challenges.png" alt="三大挑战：多尺度、多物理、物理对齐" loading="lazy">
+</figure>
+<p>构建面向PDE求解的通用基础模型，需跨越三大核心障碍：</p>
+<p><strong>1. 多维度统一表示：</strong>物理数据形态各异（1D序列、2D场、3D体），传统架构需为不同维度设计专门网络，知识难以共享。</p>
+<p><strong>2. 多物理量统一处理：</strong>不同PDE包含的物理量数量迥异（如流体方程含速度/压力/密度，电磁方程有6个分量）。统一模型需能动态处理变化的物理量组合及其复杂相互作用。</p>
+<p><strong>3. 物理约束对齐：</strong>每个PDE都蕴含各自的“物理法则”（守恒律、边界条件、对称性）。基础模型如何在保持灵活性的同时，自适应地满足这些严格约束，确保解的物理合理性？</p>
+<h2>OmniArch：<br>统一架构的三大创新突破</h2>
+<p>OmniArch 创造性地融合了频域变换、注意力机制与对比学习，攻克了上述难题：</p>
+<h3>Fourier 编码器实现维度统一</h3>
+<p>尽管物理数据在欧氏空间维度不同，但在<strong>频域空间</strong>具有统一的多尺度结构。因此，OmniArch对输入坐标和物理场进行快速傅里叶变换（FFT），保留最重要的<strong>Top-K</strong>频率分量（模式），从而将不同维度/分辨率的数据被转换为<strong>统一长度</strong>的频域表示。</p>
+<figure>
+  <img src="omniarch_assets/architecture.png" alt="OmniArch 整体架构：Fourier 编码器、共享 Transformer 与 Fourier 解码器" loading="lazy">
+</figure>
+<p>优势：(1) 计算效率从O(N²)降至O(NlogN)；(2) 低频捕获全局模式，高频编码局部细节；(3) 不同分辨率数据在低频部分自然对齐。</p>
+<h3>Temporal Mask 实现多物理变量耦合</h3>
+<p>标准Transformer采用因果注意力机制，但这会破坏同一时刻物理量之间的相互作用。OmniArch引入Temporal Mask：</p>
+<figure class="formula">
+  <img src="omniarch_assets/temporal_mask.png" alt="Temporal Mask 定义式" loading="lazy">
+</figure>
+<p>（1）时刻内完全连接：同一时间步的所有物理量<strong>token可相互“看见”并交互</strong>，精确建模耦合关系（如NS方程中的速度-压力耦合）。</p>
+<p>（2）时刻间因果约束： 严格遵循时间序列因果性，未来状态不影响过去。</p>
+<p>这种设计自然地编码了物理系统<strong>时序演进</strong>与<strong>瞬时耦合</strong>的核心特性。</p>
+<h3>PDE-Aligner 增强物理一致性</h3>
+<figure>
+  <img src="omniarch_assets/pde_aligner.png" alt="PDE-Aligner 训练与微调流程" loading="lazy">
+</figure>
+<p>在微调阶段，PDE-Aligner通过对比学习将符号方程与数值演化对齐：</p>
+<p>（1）<strong>方程编码：</strong>预训练BERT处理LaTeX格式的PDE文本</p>
+<p>（2）<strong>物理特征：</strong>频域相位差Δφ和振幅比R编码演化模式</p>
+<p>（3）<strong>能量约束：</strong>确保∑|R|≈1满足Parseval定理</p>
+<p>这种“软对齐”避免了硬编码物理约束，使模型能够自适应不同方程和边界条件的约束。</p>
+<h2>实验验证</h2>
+<p>OmniArch在涵盖流体力学、电磁学、反应扩散等领域的11种经典PDE上进行了严格测试（数据集：PDEBench, PDEArena），对比了包括专用模型（PINNs, U-Net, FNO）和前沿统一预训练模型（MPP, Poseidon, DPOT, PDEformer-1）在内的众多基线。</p>
+<p class="rh"><span class="no">1</span><span class="hl">基准性能：精度飞跃，最高提升98.7%</span></p>
+<figure>
+  <img src="omniarch_assets/table1.png" alt="OmniArch 在 11 类 PDE 上的 nRMSE 对比表" loading="lazy">
+  <figcaption>表：OmniArch在11类PDE上的nRMSE性能对比（越低越好），显著优于专用模型（上）与其他统一预训练模型（中）。下划线为之前SOTA，加粗为本文最佳。</figcaption>
+</figure>
+<p><strong>One vs All：</strong>OmniArch（Base/Large版本）在<strong>全部11项测试中均取得最佳或接近最佳性能</strong>。单个模型、单份权重即可全面替代针对不同维度、不同PDE专门设计的众多模型。</p>
+<p><strong>CFD</strong>求解的显著优势：在最具挑战性的计算流体动力学（CFD）任务上，OmniArch展现出较大优势，其中1D CFD方程求解相比最佳基线，误差降低 98.7%。</p>
+<p><strong>物理对齐效果：</strong>PDE-Aligner微调带来<strong>平均超过20% </strong>的精度提升，证明了其有效注入物理知识的能力。</p>
+<p class="rh"><span class="no">2</span><span class="hl">零样本泛化：“举一反三”的物理直觉</span></p>
+<figure>
+  <img src="omniarch_assets/zeroshot_kh.png" alt="KH 数据集零样本预测：真实结果、MPP-L 与 OmniArch-L" loading="lazy">
+</figure>
+<p><strong>未见过的方程直接解：</strong>OmniArch无需微调，即可对<strong>训练集之外</strong>的复杂PDE进行高精度求解。在Shock（激波）、KH（开尔文-亥姆霍兹不稳定性）、OTVortex等三个高难度2D流体物理系统上，其零样本性能显著超越了专门在这些任务上训练的FNO、U-Net模型。相比同样做预训练的MPP-Large模型，误差最高降低约4.8倍 (如KH: 0.2763 vs. 1.3261)<span class="ed-note">（按论文表 4 更正）</span>。</p>
+<figure>
+  <img src="omniarch_assets/multiscale.png" alt="不同网格分辨率下的预测结果" loading="lazy">
+</figure>
+<p><strong>空间分辨率直接泛化：</strong>得益于频域表示的尺度不变性，OmniArch在训练（如128x128）后，无需修改架构即可<strong>直接处理</strong>截然不同的输入分辨率（32x32, 256x256, 512x512），且精度保持在可接受范围（nRMSE &lt; 0.2），计算延迟几乎不变。这解决了传统方法因网格绑定需重新训练或插值的问题。</p>
+<p class="rh"><span class="no">3</span><span class="hl">上下文学习：动态“领悟”物理规则</span></p>
+<figure>
+  <img src="omniarch_assets/in_context.png" alt="上下文学习：PDE Prompt 长度与 nRMSE、推理时间" loading="lazy">
+</figure>
+<p>如同大语言模型（LLM）通过提示（Prompt）理解新任务，经过预训练的OmniArch展现出了上下文学习能力。给定少量历史时间步的观测数据（称为“PDE Prompt”），模型即可动态学习并模拟出该特定PDE的算子。</p>
+<p>未来，团队计划将OmniArch拓展到更广泛的PDE类型、更复杂的边界条件，并探索其在气候模拟、航天航空器辅助设计等重大科学工程问题中的落地应用。</p>
+<h2>作者简介</h2>
+<figure class="portrait">
+  <img src="omniarch_assets/author_zhouhaoyi.jpg" alt="周号益" loading="lazy">
+</figure>
+<p><strong>周号益，</strong>北京航空航天大学软件学院，副教授。长期从事序列大数据、人工智能、AI4S研究，在AIJ、ICML、NeurIPS、KDD等国内外顶级会议期刊上发表学术论文40余篇，授权国家发明专利10项，获“AAAI’21 最佳论文奖”、“IEEE IWQoS’22 最佳论文奖”、中国电子学会自然科学一等奖、首届“祖冲之”人工智能前沿创新奖、国网大数据中心科技进步一等奖、网信办中国开源创新大赛一等奖。主持国家自然科学基金、科技部重点研发等项目，负责国家电网、航天五院、华为等企业项目。入选中国科协青年托举人才、CCF青年人才发展计划、人工智能学会优博、ACM China北京优博、世界人工智能大会WAIC“云帆奖”、北京市“海英之星”等。</p>
+<div class="end">
+  <div class="end-mark">END</div>
+  <img src="omniarch_assets/logo_software.png" alt="北京航空航天大学软件学院" loading="lazy">
+  <div>软件学院宣传媒体中心出品</div>
+  <div>文案丨陈天宇 周号益</div>
+  <div>排版丨林艺涵</div>
+  <div>头图 | 王飞阳</div>
+  <div>审核丨陈前放 李慧 龙亿舟</div>
+</div>
+<div class="src-note foot">本文首发于微信公众号“北航软件人”。<a href="https://mp.weixin.qq.com/s/TSeV5uZMvdtr5q9i5UqZTQ" target="_blank" rel="noopener">阅读原文 ↗</a></div>
+</article>
+
+<script>
+(function () {
+  // hero：几十个 Fourier 模态叠加成的场，相位随时间漂移
+  const cv = document.getElementById("sim");
+  const ctx = cv.getContext("2d");
+  const W = 176, H = 96;
+  let seed = 20250713;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const modes = [];
+  for (let kx = -5; kx <= 5; kx++) for (let ky = 0; ky <= 4; ky++) {
+    if (ky === 0 && kx <= 0) continue;
+    const k = Math.hypot(kx, ky);
+    const m = { a: (0.35 + rnd()) * Math.pow(k, -1.4), ph: rnd() * 6.2832,
+                w: (0.35 + 0.5 * rnd()) * Math.sqrt(k) * (rnd() < 0.5 ? -1 : 1),
+                cx: new Float32Array(W), sx: new Float32Array(W), cy: new Float32Array(H), sy: new Float32Array(H) };
+    for (let x = 0; x < W; x++) { const t = kx * x / W * 6.2832; m.cx[x] = Math.cos(t); m.sx[x] = Math.sin(t); }
+    for (let y = 0; y < H; y++) { const t = ky * y / H * 6.2832 * (W / H) * 0.55; m.cy[y] = Math.cos(t); m.sy[y] = Math.sin(t); }
+    modes.push(m);
+  }
+  const u = new Float32Array(W * H);
+  const img = ctx.createImageData(W, H);
+  const off = document.createElement("canvas");
+  off.width = W; off.height = H;
+  const octx = off.getContext("2d");
+  function field(t) {
+    u.fill(0);
+    for (const m of modes) {
+      const c = Math.cos(m.ph + m.w * t) * m.a, s = Math.sin(m.ph + m.w * t) * m.a;
+      for (let y = 0; y < H; y++) {
+        const cy = m.cy[y], sy = m.sy[y], row = y * W;
+        for (let x = 0; x < W; x++) {
+          const ca = m.cx[x] * cy - m.sx[x] * sy, sa = m.sx[x] * cy + m.cx[x] * sy;
+          u[row + x] += ca * c - sa * s;
+        }
+      }
+    }
+  }
+  function render() {
+    let mx = 0.3;
+    for (let i = 0; i < W * H; i++) mx = Math.max(mx, Math.abs(u[i]));
+    for (let i = 0; i < W * H; i++) {
+      const v = Math.max(-1, Math.min(1, u[i] / mx));
+      const a = Math.pow(Math.abs(v), 1.3);
+      let r, g, b;
+      if (v >= 0) { r = 15 + 199 * a; g = 38 + 60 * a; b = 71 + 20 * a; }
+      else { r = 15 + 60 * a; g = 38 + 90 * a; b = 71 + 160 * a; }
+      const p = i * 4;
+      img.data[p] = r; img.data[p + 1] = g; img.data[p + 2] = b; img.data[p + 3] = 255;
+    }
+    octx.putImageData(img, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(off, 0, 0, cv.width, cv.height);
+  }
+  function fit() { cv.width = cv.clientWidth; cv.height = cv.clientHeight; }
+  window.addEventListener("resize", () => { fit(); render(); });
+  fit();
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    field(3); render();
+  } else {
+    const t0 = performance.now();
+    let last = 0;
+    (function loop(now) {
+      if (now - last > 33) { field((now - t0) / 1000 * 0.6); render(); last = now; }
+      requestAnimationFrame(loop);
+    })(t0);
+  }
+})();
+</script>
+</body>
+</html>

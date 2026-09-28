@@ -160,6 +160,297 @@
 
   .bio a:hover { border-bottom-color: var(--accent); }
 
+  /* ── Constellation ── */
+  .cst-title {
+    font-size: 1.05rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.9rem;
+  }
+
+  .cst-title .en-sub {
+    font-family: var(--serif-en);
+    font-weight: 300;
+    font-style: italic;
+    color: var(--fg-muted);
+    margin-left: 0.4em;
+    letter-spacing: 0.02em;
+  }
+
+  .cst-map {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    background: radial-gradient(120% 90% at 50% 42%, #16203A 0%, #131A2A 45%, #0B101B 100%);
+    box-shadow: 0 2px 14px rgba(11,16,27,0.10);
+    color: #F3F5FA;
+    font-family: 'Noto Sans SC', system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  }
+
+  .cst-map svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .cst-field {
+    position: relative;
+    aspect-ratio: 1000 / 400;
+  }
+
+  .polaris {
+    position: absolute;
+    left: 89.6%;
+    top: 1.5%;
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-size: 0.6rem;
+    color: #8C96AB;
+    white-space: nowrap;
+  }
+
+  .cst-quote {
+    position: absolute;
+    left: 4.5%;
+    top: 7%;
+    right: 17%;
+    font-family: var(--serif-cn);
+    font-size: 0.8rem;
+    line-height: 1.55;
+    color: #9AA3B8;
+    letter-spacing: 0.04em;
+  }
+
+  .cst-quote b { color: #F3F5FA; font-weight: 400; }
+
+  .cst-quote .tr {
+    display: block;
+    font-family: var(--serif-en);
+    font-style: italic;
+    font-size: 0.74rem;
+    letter-spacing: 0.01em;
+    color: #7A849A;
+  }
+
+  .star {
+    position: absolute;
+    width: 0;
+    height: 0;
+  }
+
+  .star .dot {
+    position: absolute;
+    left: -3px;
+    top: -3px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #C9D2E6;
+  }
+
+  .star .lab {
+    position: absolute;
+    left: 0;
+    transform: translateX(-50%);
+    text-align: center;
+    white-space: nowrap;
+    font-size: 0.6rem;
+    line-height: 1.3;
+    color: #8C96AB;
+    letter-spacing: 0.02em;
+  }
+
+  .star .lab.up { bottom: 9px; }
+  .star .lab.down { top: 9px; }
+  .star .lab.left { right: 10px; left: auto; transform: translateY(-50%); text-align: right; top: 0; }
+
+  a.star.key { text-decoration: none; color: inherit; }
+
+  a.star.key .dot {
+    left: -5px;
+    top: -5px;
+    width: 10px;
+    height: 10px;
+    background: #fff;
+    box-shadow: 0 0 0 5px rgba(142,167,218,0.20), 0 0 16px 6px rgba(142,167,218,0.45);
+    transition: box-shadow 0.25s, transform 0.25s;
+  }
+
+  a.star.key .lab {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.25;
+  }
+
+  a.star.key .lab small {
+    display: block;
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #DDE3F0;
+    letter-spacing: 0.02em;
+  }
+
+  a.star.key .lab.up { bottom: 13px; }
+  a.star.key .lab.down { top: 13px; }
+
+  a.star.key::after {
+    content: '';
+    position: absolute;
+    left: -16px;
+    top: -16px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid rgba(233,194,123,0);
+    transition: border-color 0.25s, transform 0.25s;
+  }
+
+  a.star.key:hover .dot, a.star.key:focus-visible .dot, a.star.key.hot .dot {
+    box-shadow: 0 0 0 6px rgba(233,194,123,0.22), 0 0 22px 9px rgba(233,194,123,0.55);
+    transform: scale(1.15);
+  }
+
+  a.star.key:hover::after, a.star.key:focus-visible::after, a.star.key.hot::after {
+    border-color: rgba(233,194,123,0.75);
+    transform: scale(1.25);
+  }
+
+  a.star.key:focus-visible { outline: none; }
+
+  @keyframes twinkle {
+    0%, 100% { box-shadow: 0 0 0 5px rgba(142,167,218,0.20), 0 0 16px 6px rgba(142,167,218,0.45); }
+    50% { box-shadow: 0 0 0 7px rgba(142,167,218,0.12), 0 0 22px 9px rgba(142,167,218,0.55); }
+  }
+
+  a.star.key .dot { animation: twinkle 3.6s ease-in-out infinite; }
+  a.star.key:nth-of-type(2) .dot { animation-delay: 1.2s; }
+  a.star.key:nth-of-type(3) .dot { animation-delay: 2.4s; }
+  a.star.key:hover .dot, a.star.key.hot .dot { animation: none; }
+
+  .cst-lead {
+    margin: 1.3rem 0 1.1rem;
+    text-wrap: balance;
+    font-size: 0.98rem;
+    line-height: 1.8;
+    color: var(--fg);
+    letter-spacing: 0.02em;
+  }
+
+  .cst-lead[data-lang="en"] { font-family: var(--serif-en); font-size: 1.02rem; line-height: 1.6; }
+
+  .cst-cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .cst-card {
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--accent);
+    border-radius: 6px;
+    background: #fff;
+    padding: 0.85rem 0.9rem 0.8rem;
+    display: flex;
+    flex-direction: column;
+    scroll-margin-top: 1.5rem;
+    transition: box-shadow 0.25s, border-color 0.25s;
+  }
+
+  .cst-card.hot, .cst-card:target {
+    box-shadow: 0 4px 18px rgba(44,95,74,0.13);
+    border-color: var(--accent);
+  }
+
+  .cst-card:target { animation: cardFlash 1.6s ease-out 1; }
+
+  @keyframes cardFlash {
+    0% { background: var(--accent-light); }
+    100% { background: #fff; }
+  }
+
+  .cst-tag {
+    align-self: flex-start;
+    font-size: 0.68rem;
+    color: var(--accent);
+    background: var(--accent-light);
+    padding: 0.08em 0.5em;
+    border-radius: 2px;
+    letter-spacing: 0.03em;
+    line-height: 1.6;
+    margin-bottom: 0.55rem;
+  }
+
+  .cst-tag[data-lang="en"] { font-family: var(--serif-en); font-style: italic; font-size: 0.74rem; }
+
+  .cst-name {
+    font-size: 0.98rem;
+    font-weight: 500;
+    color: var(--fg);
+    line-height: 1.5;
+    letter-spacing: 0.03em;
+  }
+
+  .cst-name .lat {
+    font-family: var(--serif-en);
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+
+  .cst-pos {
+    margin-top: 0.4rem;
+    font-size: 0.8rem;
+    line-height: 1.8;
+    color: var(--fg-secondary);
+    flex: 1;
+  }
+
+  .cst-pos[data-lang="en"] { font-family: var(--serif-en); font-size: 0.86rem; line-height: 1.6; }
+
+  .cst-links {
+    margin-top: 0.7rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 0 0.6rem;
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    line-height: 1.8;
+    min-height: calc(3.6em + 0.5rem);
+  }
+
+  .cst-links a {
+    white-space: nowrap;
+    color: var(--fg-muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .cst-links a:hover { color: var(--accent); }
+
+  .cst-formula {
+    margin-top: 1.1rem;
+    text-align: center;
+    text-wrap: balance;
+    font-size: 0.8rem;
+    line-height: 2.1;
+    color: var(--fg-secondary);
+  }
+
+  .cst-formula .lhs { color: var(--fg); font-weight: 500; font-family: var(--serif-en); letter-spacing: 0.02em; white-space: nowrap; }
+  .cst-formula .op { font-family: var(--mono); color: var(--fg-muted); margin: 0 0.1em; }
+  .cst-formula .term { white-space: nowrap; }
+  .cst-formula .term b { color: var(--accent); font-weight: 500; }
+  .cst-formula[data-lang="en"] { font-family: var(--serif-en); font-size: 0.86rem; }
+
+  @media (prefers-reduced-motion: reduce) {
+    a.star.key .dot, .cst-card:target { animation: none; }
+  }
+
   /* ── News ── */
   .news-list {
     list-style: none;
@@ -323,6 +614,17 @@
     .contact-list li { flex-direction: column; gap: 0.1rem; }
     .contact-label { min-width: unset; }
     .lang-switch { top: 1rem; right: 1rem; }
+    .cst-quote { position: static; padding: 0.9rem 1rem 0; font-size: 0.78rem; }
+    .cst-field { aspect-ratio: 1000 / 600; }
+    .star .lab { font-size: 0.56rem; }
+    a.star.key .lab { font-size: 0.8rem; }
+    a.star.key .lab small { font-size: 0.68rem; }
+    .polaris { left: auto; right: 12.5%; top: 2%; }
+    .cst-cards { grid-template-columns: minmax(0, 1fr); gap: 0.6rem; }
+    .cst-card { padding: 0.8rem 1rem 0.75rem; }
+    .cst-links { min-height: 0; }
+    .cst-pos { font-size: 0.84rem; }
+    .cst-formula { text-align: left; }
   }
 </style>
 </head>
@@ -371,9 +673,81 @@
     </div>
   </div>
 
+  <div class="section" id="constellation">
+    <div class="section-label">constellation</div>
+    <div class="cst-title"><span data-lang="zh">智算星座计划</span><span data-lang="en">The Constellation Program</span></div>
+
+    <div class="cst-map">
+      <svg viewBox="0 0 1000 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="#C9D2E6"><circle cx="324" cy="60" r="1.6" opacity="0.20"/><circle cx="821" cy="38" r="1.3" opacity="0.20"/><circle cx="507" cy="15" r="1.0" opacity="0.36"/><circle cx="241" cy="220" r="0.8" opacity="0.53"/><circle cx="124" cy="89" r="1.6" opacity="0.42"/><circle cx="62" cy="234" r="0.8" opacity="0.59"/><circle cx="47" cy="343" r="1.0" opacity="0.36"/><circle cx="541" cy="228" r="1.3" opacity="0.52"/><circle cx="181" cy="233" r="1.6" opacity="0.26"/><circle cx="97" cy="285" r="1.3" opacity="0.21"/><circle cx="206" cy="272" r="1.0" opacity="0.51"/><circle cx="466" cy="369" r="1.0" opacity="0.31"/><circle cx="794" cy="280" r="0.8" opacity="0.21"/><circle cx="300" cy="198" r="1.0" opacity="0.49"/><circle cx="288" cy="392" r="0.8" opacity="0.40"/><circle cx="165" cy="137" r="1.0" opacity="0.36"/><circle cx="962" cy="31" r="1.3" opacity="0.42"/><circle cx="875" cy="125" r="1.6" opacity="0.33"/><circle cx="497" cy="319" r="0.8" opacity="0.53"/><circle cx="945" cy="190" r="1.6" opacity="0.21"/><circle cx="731" cy="124" r="1.3" opacity="0.60"/><circle cx="822" cy="114" r="1.0" opacity="0.55"/><circle cx="347" cy="376" r="1.0" opacity="0.25"/><circle cx="117" cy="24" r="1.0" opacity="0.23"/><circle cx="248" cy="156" r="1.0" opacity="0.21"/><circle cx="449" cy="220" r="0.8" opacity="0.52"/><circle cx="864" cy="111" r="1.0" opacity="0.59"/><circle cx="683" cy="152" r="0.8" opacity="0.24"/><circle cx="176" cy="93" r="0.8" opacity="0.19"/><circle cx="831" cy="73" r="1.0" opacity="0.18"/><circle cx="419" cy="148" r="1.3" opacity="0.31"/><circle cx="125" cy="344" r="1.3" opacity="0.46"/><circle cx="740" cy="183" r="1.6" opacity="0.52"/><circle cx="392" cy="160" r="0.8" opacity="0.38"/><circle cx="400" cy="76" r="0.8" opacity="0.37"/><circle cx="110" cy="240" r="0.8" opacity="0.18"/><circle cx="151" cy="41" r="1.0" opacity="0.44"/><circle cx="70" cy="83" r="1.0" opacity="0.24"/><circle cx="252" cy="139" r="1.0" opacity="0.38"/><circle cx="115" cy="195" r="1.0" opacity="0.38"/><circle cx="312" cy="58" r="1.6" opacity="0.32"/><circle cx="265" cy="332" r="0.8" opacity="0.40"/><circle cx="205" cy="381" r="1.0" opacity="0.24"/><circle cx="543" cy="11" r="1.3" opacity="0.31"/><circle cx="643" cy="36" r="1.0" opacity="0.40"/><circle cx="908" cy="142" r="0.8" opacity="0.40"/><circle cx="779" cy="132" r="0.8" opacity="0.44"/><circle cx="788" cy="303" r="0.8" opacity="0.52"/><circle cx="818" cy="296" r="0.8" opacity="0.26"/><circle cx="493" cy="292" r="0.8" opacity="0.51"/><circle cx="472" cy="77" r="1.3" opacity="0.58"/><circle cx="447" cy="375" r="1.0" opacity="0.58"/><circle cx="365" cy="88" r="0.8" opacity="0.38"/><circle cx="338" cy="193" r="1.3" opacity="0.53"/><circle cx="479" cy="261" r="1.6" opacity="0.22"/><circle cx="661" cy="364" r="1.6" opacity="0.50"/><circle cx="478" cy="71" r="1.6" opacity="0.32"/><circle cx="801" cy="389" r="1.0" opacity="0.37"/><circle cx="743" cy="34" r="0.8" opacity="0.25"/><circle cx="127" cy="60" r="1.0" opacity="0.52"/><circle cx="146" cy="331" r="1.0" opacity="0.46"/><circle cx="350" cy="219" r="0.8" opacity="0.19"/><circle cx="799" cy="291" r="0.8" opacity="0.40"/><circle cx="934" cy="174" r="0.8" opacity="0.53"/><circle cx="211" cy="101" r="1.0" opacity="0.39"/><circle cx="764" cy="130" r="1.3" opacity="0.36"/><circle cx="131" cy="364" r="1.0" opacity="0.56"/><circle cx="662" cy="326" r="1.3" opacity="0.36"/><circle cx="918" cy="201" r="1.3" opacity="0.24"/><circle cx="511" cy="349" r="0.8" opacity="0.44"/></g></svg>
+      <div class="cst-quote">
+        <span data-lang="zh">《尚书》：<b>璇玑玉衡</b>，以齐七政</span>
+        <span data-lang="en"><b>璇玑玉衡，以齐七政</b><span class="tr">Book of Documents: observe Xuan, Ji and Yuheng to set the Seven Regulators in order.</span></span>
+      </div>
+      <div class="cst-field">
+        <svg viewBox="0 0 1000 400" preserveAspectRatio="none" aria-hidden="true">
+          <g stroke="#4E618B" stroke-width="1.2" fill="none" vector-effect="non-scaling-stroke">
+            <polyline vector-effect="non-scaling-stroke" points="90,327 204,240 348,225 535,208 639,260 890,218 881,136"/>
+            <line vector-effect="non-scaling-stroke" x1="881" y1="128" x2="889" y2="14" stroke-dasharray="4 5"/>
+          </g>
+        </svg>
+        <span class="polaris">to Polaris</span>
+        <span class="star" style="left:9%;top:81.7%"><i class="dot"></i><span class="lab up">Alkaid<br>摇光</span></span>
+        <span class="star" style="left:20.4%;top:60.1%"><i class="dot"></i><span class="lab up">Mizar<br>开阳</span></span>
+        <a class="star key" data-k="alioth" href="#alioth" style="left:34.8%;top:56.2%" aria-label="智算玉衡 Alioth"><i class="dot"></i><span class="lab up">玉衡<small>Alioth</small></span></a>
+        <span class="star" style="left:53.5%;top:52.1%"><i class="dot" style="transform:scale(.8)"></i><span class="lab up">Megrez<br>天权</span></span>
+        <a class="star key" data-k="phecda" href="#phecda" style="left:63.9%;top:64.9%" aria-label="智算天玑 Phecda"><i class="dot"></i><span class="lab down">天玑<small>Phecda</small></span></a>
+        <a class="star key" data-k="omniarch" href="#omniarch" style="left:89%;top:54.6%" aria-label="智算天璇 OmniArch"><i class="dot"></i><span class="lab down">天璇<small>OmniArch</small></span></a>
+        <span class="star" style="left:88.1%;top:34%"><i class="dot"></i><span class="lab left">Dubhe<br>天枢</span></span>
+      </div>
+    </div>
+
+    <div class="cst-lead" data-lang="zh">科学智算：新一代计算型人工智能</div>
+    <div class="cst-lead" data-lang="en">AI-enabled Scientific Computing: the next generation of Computation-Native AI</div>
+
+    <div class="cst-cards">
+      <div class="cst-card" id="omniarch" data-k="omniarch">
+        <span class="cst-tag" data-lang="zh">学答案（基座模型）</span><span class="cst-tag" data-lang="en">learn the answer (foundation model)</span>
+        <div class="cst-name"><span data-lang="zh">智算天璇 </span><span class="lat">OmniArch</span></div>
+        <div class="cst-pos" data-lang="zh">学习方程通用解，<br>规模效应扩展，突破数值方法极限。</div>
+        <div class="cst-pos" data-lang="en">Learns general solutions, scaling up past the limits of numerical methods.</div>
+        <div class="cst-links">
+          <a href="https://proceedings.mlr.press/v267/chen25cp.html" target="_blank" rel="noopener"><span data-lang="zh">ICML 2025 论文</span><span data-lang="en">ICML 2025</span></a>
+          <a href="https://openi.pcl.ac.cn/cty315/OmniArch" target="_blank" rel="noopener"><span data-lang="zh">代码</span><span data-lang="en">code</span></a>
+          <a href="blog/omniarch.html"><span data-lang="zh">博客</span><span data-lang="en">blog</span></a>
+          <a href="https://mp.weixin.qq.com/s/TSeV5uZMvdtr5q9i5UqZTQ" target="_blank" rel="noopener"><span data-lang="zh">公众号原文</span><span data-lang="en">WeChat post</span></a>
+        </div>
+      </div>
+      <div class="cst-card" id="alioth" data-k="alioth">
+        <span class="cst-tag" data-lang="zh">学方法（混合求解）</span><span class="cst-tag" data-lang="en">learn the method (hybrid solving)</span>
+        <div class="cst-name"><span data-lang="zh">智算玉衡 </span><span class="lat">Alioth</span></div>
+        <div class="cst-pos" data-lang="zh">学习求解方法，<br>数值混合求解，精度对标工业。</div>
+        <div class="cst-pos" data-lang="en">Learns solution methods, hybrid with numerics, industrial-grade accuracy.</div>
+        <div class="cst-links">
+          <a href="blog/alioth.html"><span data-lang="zh">博客</span><span data-lang="en">blog</span></a>
+          <a href="blog/eq2matrix.html"><span data-lang="zh">演示</span><span data-lang="en">demo</span></a>
+        </div>
+      </div>
+      <div class="cst-card" id="phecda" data-k="phecda">
+        <span class="cst-tag" data-lang="zh">学判断（关联发现）</span><span class="cst-tag" data-lang="en">learn the judgment (association discovery)</span>
+        <div class="cst-name"><span data-lang="zh">智算天玑 </span><span class="lat">Phecda</span></div>
+        <div class="cst-pos" data-lang="zh">学习决策判断，<br>自主闭环引擎，最优配置推荐。</div>
+        <div class="cst-pos" data-lang="en">Learns to decide, a self-evolving engine recommending the best configuration.</div>
+        <div class="cst-links">
+          <a href="blog/phecda.html"><span data-lang="zh">博客</span><span data-lang="en">blog</span></a>
+          <a href="blog/phecda_demo.html">PlayGround</a>
+          <a href="blog/phecda.html#launch"><span data-lang="zh">发布视频</span><span data-lang="en">video</span></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="cst-formula" data-lang="zh"><span class="lhs">AI-Native 求解器</span> <span class="op">=</span> <span class="term"><b>学答案</b>（基座模型）</span> <span class="op">+</span> <span class="term"><b>学方法</b>（混合求解）</span> <span class="op">+</span> <span class="term"><b>学判断</b>（关联发现）</span></div>
+    <div class="cst-formula" data-lang="en"><span class="lhs">AI-Native solver</span> <span class="op">=</span> <span class="term"><b>learn the answer</b> (foundation model)</span> <span class="op">+</span> <span class="term"><b>learn the method</b> (hybrid solving)</span> <span class="op">+</span> <span class="term"><b>learn the judgment</b> (association discovery)</span></div>
+  </div>
+
   <div class="section">
     <div class="section-label">news</div>
     <ul class="news-list">
+      <li><span class="news-date">2026.09</span> <span data-lang="zh">发布 <a href="blog/phecda.html">智算天玑（Phecda）</a> 预览，用 Jev 式决策加速复杂工业软件求解</span><span data-lang="en">Released <a href="blog/phecda.html">Phecda</a> preview: Jev-style decisions that speed up solving in complex industrial software</span></li>
       <li><span class="news-date">2026.08</span> <span data-lang="zh">发布 <a href="blog/alioth.html">智算玉衡（Alioth）</a> 预览：让 AI 生成方程求解器</span><span data-lang="en">Released <a href="blog/alioth.html">Alioth</a> preview: AI-generated equation solvers</span></li>
       <li><span class="news-date">2026.05</span> <span data-lang="zh">入选中国人工智能学会第二届“清源学者”</span><span data-lang="en">Selected as a CAAI Qingyuan Scholar</span></li>
       <li><span class="news-date">2026.01</span> <span data-lang="zh">获 2025 中国电子学会科技进步奖 <strong>一等奖</strong></span><span data-lang="en">Received <strong>First Prize</strong> of CIE Science and Technology Progress Award 2025</span></li>
@@ -504,8 +878,8 @@
   </div>
 
   <footer>
-    <span data-lang="zh">更新于 2026.05 · 托管于 Cloudflare Pages</span>
-    <span data-lang="en">last updated: 2026.05 · hosted on Cloudflare Pages</span>
+    <span data-lang="zh">更新于 2026.09 · 托管于 Cloudflare Pages</span>
+    <span data-lang="en">last updated: 2026.09 · hosted on Cloudflare Pages</span>
   </footer>
 
 </div>
@@ -520,6 +894,16 @@ try {
   if (saved === 'en') document.body.classList.add('en');
   else if (!saved && !navigator.language.startsWith('zh')) document.body.classList.add('en');
 } catch(e) {}
+
+// 北斗亮星与产品卡片联动高亮
+document.querySelectorAll('[data-k]').forEach(function (el) {
+  var k = el.getAttribute('data-k');
+  function set(on) {
+    document.querySelectorAll('[data-k="' + k + '"]').forEach(function (x) { x.classList.toggle('hot', on); });
+  }
+  el.addEventListener('mouseenter', function () { set(true); });
+  el.addEventListener('mouseleave', function () { set(false); });
+});
 
 function revealEmail(e) {
   e.preventDefault();
